@@ -133,12 +133,17 @@
     }
     context.restore();
   }
-  async function render(photos, style, sheet = false) {
+  async function render(photos, style, sheet = false, { maxDimension } = {}) {
     const design = layout(style.template, sheet, style.photoIndex || 0);
-    const canvas = document.createElement("canvas"); canvas.width = design.width; canvas.height = design.height;
+    // Draw tiny template thumbnails directly at their display resolution.
+    // Saving and printing omit maxDimension and retain the full-size layout.
+    const scale = Number.isFinite(maxDimension) && maxDimension > 0 ? Math.min(1, maxDimension / Math.max(design.width, design.height)) : 1;
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(design.width * scale)); canvas.height = Math.max(1, Math.round(design.height * scale));
     const context = canvas.getContext("2d");
+    context.scale(scale, scale);
     const frameColor = /^#[0-9a-f]{6}$/i.test(style.frameColor) ? style.frameColor : "#efd0da";
-    context.fillStyle = frameColor; context.fillRect(0, 0, canvas.width, canvas.height);
+    context.fillStyle = frameColor; context.fillRect(0, 0, design.width, design.height);
     for (const slot of design.slots) {
       const {x, y, width, height, index} = slot;
       if (style.template === "polaroid") {
@@ -147,7 +152,7 @@
       context.save(); roundedPath(context, x, y, width, height, 0); context.clip();
       if (photos[index]) {
         const image = await createImageBitmap(photos[index]);
-        try { context.drawImage(filteredPhoto(image, width, height, style.filter), x, y); }
+        try { context.drawImage(filteredPhoto(image, Math.max(1, Math.round(width * scale)), Math.max(1, Math.round(height * scale)), style.filter), x, y, width, height); }
         finally { image.close(); }
       } else {
         context.fillStyle = "#fbf5f7"; context.fillRect(x, y, width, height);
@@ -158,7 +163,7 @@
     }
     decorations(context, design, {...style, frameColor}, sheet);
     context.fillStyle = textColor(frameColor); context.textAlign = "center";
-    const footerY = sheet ? canvas.height - 75 : canvas.height - (style.template === "polaroid" ? 205 : 160);
+    const footerY = sheet ? design.height - 75 : design.height - (style.template === "polaroid" ? 205 : 160);
     const themes = {
       none: { title: "Minimal ミニマル", caption: "Simply you" },
       sakura: { title: "Sakura 桜", caption: "Cherry blossom" },
@@ -171,9 +176,9 @@
     };
     const theme = themes[style.theme] || themes.none;
     context.font = `600 ${sheet ? 28 : 34}px Georgia, "Yu Mincho", serif`;
-    context.fillText(theme.title, canvas.width / 2, footerY);
+    context.fillText(theme.title, design.width / 2, footerY);
     context.font = `${sheet ? 22 : 26}px "Yu Gothic", sans-serif`;
-    context.fillText(`${theme.caption}  /  ${style.date}`, canvas.width / 2, footerY + 45);
+    context.fillText(`${theme.caption}  /  ${style.date}`, design.width / 2, footerY + 45);
     return canvas;
   }
   globalThis.PhotoBoothStrip = { render, templates, layout };

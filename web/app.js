@@ -716,7 +716,7 @@ async function renderTemplateThumbnails() {
   const request = ++thumbnailGeneration;
   const style = stripStyle();
   for (const choice of document.querySelectorAll(".template-choice")) {
-    const source = await PhotoBoothStrip.render(Array(4).fill(null), {...style, template:choice.dataset.template, photoIndex:0, filter:"original"});
+    const source = await PhotoBoothStrip.render(Array(4).fill(null), {...style, template:choice.dataset.template, photoIndex:0, filter:"original"}, false, {maxDimension:168});
     if (request !== thumbnailGeneration) return;
     const thumbnail = choice.querySelector("canvas");
     const scale = Math.min(70 / source.width, 84 / source.height);
@@ -738,11 +738,28 @@ function updateDesignSelections() {
   const descriptions = {none:"A quiet frame with simple keepsake typography.", sakura:"Cherry blossoms, fine branches, and delicate pink accents around your photos.", tokyo:"Japanese postcard typography, graphic borders, and a postal stamp accent.", kyoto:"Traditional wave patterns and a small seal, softly woven into the margins.", osaka:"Little city skylines and bright window accents along your frame.", hokkaido:"Delicate snowflakes and falling snow for a winter keepsake.", hanabi:"Summer firework bursts celebrating your little moments.", tsuki:"A crescent moon and tiny stars for a moonlit memory."};
   $("theme-description").textContent = descriptions[$("strip-theme").value];
 }
+let designPreviewTimer = null;
+let thumbnailsPending = false;
+function scheduleDesignPreview(refreshThumbnails) {
+  // Commit the selected card immediately, then coalesce rapid choices after paint.
+  // Invalidate running renders so an older theme cannot replace the new selection.
+  ++previewGeneration;
+  shareStripFile = null;
+  if (refreshThumbnails) { thumbnailsPending = true; ++thumbnailGeneration; }
+  clearTimeout(designPreviewTimer);
+  designPreviewTimer = setTimeout(() => {
+    designPreviewTimer = null;
+    renderStripPreview();
+    if (thumbnailsPending) { thumbnailsPending = false; renderTemplateThumbnails(); }
+  }, 40);
+}
+
 document.querySelectorAll(".template-choice").forEach(choice => choice.addEventListener("click", () => {
   $("strip-template").value = choice.dataset.template;
   $("strip-template").dispatchEvent(new Event("input"));
 }));
 document.querySelectorAll(".theme-choice").forEach(choice => choice.addEventListener("click", () => {
+  if ($("strip-theme").value === choice.dataset.theme) return;
   $("strip-theme").value = choice.dataset.theme;
   $("strip-theme").dispatchEvent(new Event("input"));
 }));
@@ -758,9 +775,8 @@ document.querySelectorAll("#design-controls input, #design-controls select").for
   }
   if (control.id === "strip-filter") updateFilterViews();
   updateDesignSelections();
+  scheduleDesignPreview(["strip-theme", "frame-color"].includes(control.id));
   updateControls();
-  if (["strip-theme", "frame-color"].includes(control.id)) renderTemplateThumbnails();
-  renderStripPreview();
 }));
 $("reset").addEventListener("click", () => {
   if (busy || countdown || connecting) return;
@@ -870,7 +886,12 @@ renderSlots();
     wrapper.addEventListener("focusout", event => { if (!wrapper.contains(event.relatedTarget)) close(); });
     window.addEventListener("resize", close);
     select.addEventListener("input", sync); select.addEventListener("change", sync);
-    new MutationObserver(sync).observe(select, {attributes:true,attributeFilter:["disabled"],childList:true,subtree:true,characterData:true});
+    new MutationObserver(records => {
+      if (records.every(record => record.type === "attributes" && record.attributeName === "disabled")) {
+        trigger.disabled = select.disabled;
+        if (select.disabled) close();
+      } else sync();
+    }).observe(select, {attributes:true,attributeFilter:["disabled"],childList:true,subtree:true,characterData:true});
     sync();
   });
 })();

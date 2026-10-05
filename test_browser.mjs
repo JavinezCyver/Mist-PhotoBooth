@@ -119,7 +119,27 @@ with zipfile.ZipFile(sys.argv[1]) as archive:
     if (await evaluate('typeof connectCamera === "function" && Boolean(document.getElementById("strip-filter-trigger"))')) break;
     await sleep(100);
   }
-  if (process.argv.includes('--flow-only')) {
+  if (process.argv.includes('--performance-only')) {
+    await command('Emulation.setCPUThrottlingRate', {rate:4});
+    const metrics = await evaluate(`(async () => {
+      const cards = Array.from(document.querySelectorAll('.theme-choice'));
+      const times = [];
+      for (let index=0; index<32; index++) {
+        const start = performance.now(); cards[index % cards.length].click(); times.push(performance.now() - start);
+        await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      }
+      for (let index=0; index<32; index++) cards[index % cards.length].click();
+      await new Promise(resolve => setTimeout(resolve, 500));
+      const expected = await PhotoBoothStrip.render(photos.map(photo => photo?.blob || null), stripStyle());
+      if (expected.toDataURL() !== document.getElementById('strip-preview').toDataURL()) throw new Error('Rapid theme clicks left a stale preview');
+      if (document.querySelector('.theme-choice[aria-pressed=true]').dataset.theme !== 'tsuki') throw new Error('Final theme selection was lost');
+      times.sort((a,b) => a-b);
+      return {medianClickMs:times[16], p95ClickMs:times[30], maxClickMs:times[31]};
+    })()`);
+    assert.deepEqual(errors, []);
+    console.log('Theme selection at 4x CPU slowdown:', JSON.stringify(metrics));
+    console.log('PASS: rapid theme selection keeps the final frame preview and selected card in sync.');
+  } else if (process.argv.includes('--flow-only')) {
     const action = (expression, gesture = false) => evaluate(`(async () => { ${expression} })()`, gesture);
     const visibleStep = () => evaluate(`Array.from(document.querySelectorAll('main > section, main > aside')).filter(panel => !panel.hidden).map(panel => panel.id)`);
     assert.deepEqual(await visibleStep(), ['design-step']);
