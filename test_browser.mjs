@@ -160,6 +160,24 @@ with zipfile.ZipFile(sys.argv[1]) as archive:
         return true;
       } finally { CanvasRenderingContext2D.prototype.fillText = original; }
     })()`), true, 'Theme cards must replace the frame branding with the matching title and caption for every template');
+    assert.equal(await evaluate(`(async () => {
+      // A uniform source must reach every corner of every photo slot, with no padding.
+      for (const [width,height] of [[320,180],[180,320]]) {
+        const source=document.createElement('canvas'); source.width=width; source.height=height;
+        const context=source.getContext('2d'); context.fillStyle='#1248a0'; context.fillRect(0,0,width,height);
+        const blob=await toBlob(source);
+        for (const template of ['classic','grid','polaroid']) for (const sheet of [false,true]) {
+          const canvas=await PhotoBoothStrip.render([blob,blob,blob,blob], {...stripStyle(),template,theme:'none',filter:'original'},sheet);
+          for (const slot of PhotoBoothStrip.layout(template,sheet,0).slots) {
+            for (const [x,y] of [[slot.x+2,slot.y+2],[slot.x+slot.width-3,slot.y+2],[slot.x+2,slot.y+slot.height-3],[slot.x+slot.width-3,slot.y+slot.height-3]]) {
+              const pixel=Array.from(canvas.getContext('2d').getImageData(x,y,1,1).data).slice(0,3).join(',');
+              if (pixel!=='18,72,160') return false;
+            }
+          }
+        }
+      }
+      return true;
+    })()`), true, 'Portrait and landscape photos must fill every slot edge to edge without white padding');
     assert.equal(await evaluate('window.__cameraRequests'), 0);
     await action(`document.querySelector('[data-color="#ddd0ef"]').click(); document.querySelector('[data-template=grid]').click(); document.getElementById('strip-theme').value = 'sakura'; document.getElementById('strip-theme').dispatchEvent(new Event('input')); document.getElementById('continue-camera').click()`);
     assert.deepEqual(await visibleStep(), ['camera-step']);
