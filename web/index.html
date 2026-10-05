@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#EFD0DA">
+  <title>MIST Photobooth</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <script src="local-save.js" defer></script>
+  <script src="filters.js" defer></script>
+  <script src="strip-renderer.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header><div><span class="eyebrow">LITTLE MOMENTS, SOFTLY KEPT</span><h1>MIST <span>Photobooth</span></h1></div><p><span lang="ja">小さな思い出</span><br>A little moment, yours to keep.</p></header>
+  <main class="booth-flow" data-step="design">
+    <section id="camera-step" class="camera-panel" aria-label="Live camera" hidden>
+      <div class="panel-heading"><div><span class="eyebrow">02 / CAPTURE</span><h2>A moment for you</h2></div><span class="session-tag">Your cozy corner</span></div>
+      <div class="viewfinder">
+        <video id="camera" autoplay muted playsinline aria-label="Live camera preview"></video>
+        <canvas id="camera-preview" hidden role="img" aria-label="Live camera with selected filter"></canvas>
+        <div id="placeholder"><span class="camera-icon" aria-hidden="true">◎</span><h2>Make a little memory</h2><p>Open your camera, settle in, and be yourself.<br>Or bring a few favorite photos from your device.</p></div>
+        <span id="live-badge" hidden><i></i> LIVE</span>
+        <div id="countdown" role="timer" aria-label="Capture countdown" aria-live="assertive" aria-atomic="true" hidden></div>
+        <div id="capture-note" role="status" aria-live="polite" hidden></div>
+        <div id="shutter-flash" aria-hidden="true"></div>
+      </div>
+      <div class="camera-controls">
+        <label>Camera <select id="device" aria-label="Camera device"><option value="">Default camera</option></select></label>
+        <button id="connect" class="secondary">Open camera</button>
+        <button id="switch-camera" class="secondary" hidden disabled>Switch to back camera</button>
+        <label class="timer-choice">Countdown<select id="capture-delay"><option value="0">Off</option><option value="3" selected>3 seconds</option><option value="5">5 seconds</option><option value="10">10 seconds</option></select></label>
+        <label class="mirror"><input id="mirror" type="checkbox" checked> Mirror photos</label>
+      </div>
+      <button id="capture" class="primary" disabled>Capture photo 1 · 3 second countdown</button>
+      <button id="upload" class="secondary upload-button">Upload images</button>
+      <input id="image-files" type="file" accept="image/*" multiple hidden aria-label="Choose images for empty photo slots">
+      <div id="camera-error" class="camera-help" role="alert" hidden>
+        <p id="camera-error-message"></p>
+        <p>You can still fill your photo slots with <strong>Upload images</strong>, then save or print your set.</p>
+      </div>
+      <div id="camera-session-host">
+      <section class="session-panel" aria-label="Your four photos">
+        <div class="panel-heading"><h2 id="session-heading">Four little moments</h2><p id="progress">0 / 4 photos ready</p></div>
+        <div id="slots"></div>
+        <p id="session-help" class="hint">Capture or upload all four photos to save or print. Clear a slot to replace its photo.</p>
+      </section>
+      </div>
+      <div class="flow-actions"><button id="back-design" class="quiet" type="button">Back to design</button><button id="review-photos" class="secondary" type="button" disabled>Preview photos</button></div>
+    </section>
+    <aside id="design-step" aria-label="Choose your photo strip design">
+      <section class="strip-editor" aria-label="Photo strip design">
+        <div>
+          <span class="eyebrow">01 / MAKE IT YOURS</span><h2>Your photo strip</h2>
+          <div id="design-controls" class="design-controls">
+            <label>Filter<select id="strip-filter" aria-describedby="selected-filter"><option value="original">Original</option><option value="bw">Black &amp; White</option><option value="mono">Mono</option><option value="vintage">Vintage</option><option value="sepia">Sepia</option><option value="rosy">Rosy</option><option value="soft">Soft</option></select></label>
+            <div class="template-controls"><span class="control-label">Template</span>
+              <select id="strip-template" hidden aria-label="Template"><option value="classic">Classic strip</option><option value="grid">Four-photo grid</option><option value="polaroid">Single Polaroid</option></select>
+              <div class="template-choices" role="group" aria-label="Choose a template">
+                <button type="button" class="template-choice" data-template="classic" aria-pressed="true"><canvas aria-hidden="true"></canvas><span>Classic</span><small>4 photos</small></button>
+                <button type="button" class="template-choice" data-template="grid" aria-pressed="false"><canvas aria-hidden="true"></canvas><span>2 × 2 grid</span><small>4 photos</small></button>
+                <button type="button" class="template-choice" data-template="polaroid" aria-pressed="false"><canvas aria-hidden="true"></canvas><span>Polaroid</span><small>1 photo</small></button>
+              </div>
+            </div>
+            <label id="polaroid-photo-label" hidden>Polaroid photo<select id="polaroid-photo"><option value="0">Photo 1</option><option value="1">Photo 2</option><option value="2">Photo 3</option><option value="3">Photo 4</option></select></label>
+            <div class="frame-controls"><span class="control-label">Frame color</span>
+              <div class="color-swatches" role="group" aria-label="Choose a frame color">
+                <button type="button" class="color-swatch mist" data-color="#efd0da" aria-label="Mist pink" aria-pressed="true"></button>
+                <button type="button" class="color-swatch cream" data-color="#fff3df" aria-label="Cream" aria-pressed="false"></button>
+                <button type="button" class="color-swatch lilac" data-color="#ddd0ef" aria-label="Lilac" aria-pressed="false"></button>
+                <button type="button" class="color-swatch sky" data-color="#cde6f5" aria-label="Sky blue" aria-pressed="false"></button>
+                <button type="button" class="color-swatch midnight" data-color="#292839" aria-label="Midnight" aria-pressed="false"></button>
+              </div>
+              <label class="custom-color">Custom color<input id="frame-color" type="color" value="#EFD0DA"></label>
+              <span id="color-name" class="selection-note">Mist pink · #EFD0DA</span>
+            </div>
+            <div class="theme-controls"><span class="control-label">Theme</span><label hidden>Theme<select id="strip-theme" aria-describedby="theme-description"><option value="none">Minimal ミニマル</option><option value="sakura">Sakura 桜</option><option value="tokyo">Tokyo 東京</option><option value="kyoto">Kyoto 京都</option><option value="osaka">Osaka 大阪</option><option value="hokkaido">Hokkaido 北海道</option><option value="hanabi">Hanabi 花火</option><option value="tsuki">Tsuki 月</option></select></label>
+              <div class="theme-choices" role="group" aria-label="Choose a theme">
+                <button type="button" class="theme-choice" data-theme="none" aria-pressed="true"><span>Minimal ミニマル</span><small>Simply you</small></button>
+                <button type="button" class="theme-choice" data-theme="sakura" aria-pressed="false"><span>Sakura 桜</span><small>Cherry blossom</small></button>
+                <button type="button" class="theme-choice" data-theme="tokyo" aria-pressed="false"><span>Tokyo 東京</span><small>City postcards</small></button>
+                <button type="button" class="theme-choice" data-theme="kyoto" aria-pressed="false"><span>Kyoto 京都</span><small>Quiet moments</small></button>
+                <button type="button" class="theme-choice" data-theme="osaka" aria-pressed="false"><span>Osaka 大阪</span><small>City lights</small></button>
+                <button type="button" class="theme-choice" data-theme="hokkaido" aria-pressed="false"><span>Hokkaido 北海道</span><small>Snowy memories</small></button>
+                <button type="button" class="theme-choice" data-theme="hanabi" aria-pressed="false"><span>Hanabi 花火</span><small>Summer fireworks</small></button>
+                <button type="button" class="theme-choice" data-theme="tsuki" aria-pressed="false"><span>Tsuki 月</span><small>Moonlit moments</small></button>
+              </div>
+            </div>
+          </div>
+          <p id="selected-filter" class="filter-indicator" role="status" aria-live="polite">Selected filter: Original</p>
+          <p id="theme-description" class="hint">A quiet frame with simple keepsake typography.</p>
+          <p id="template-help" class="hint">Fill all four slots to export. Your photos stay here when you switch templates.</p>
+        </div>
+        <div id="design-preview-host" class="flow-preview-host"><div id="shared-strip-preview" class="strip-preview"><canvas id="strip-preview" width="900" height="2700" role="img" aria-label="Photo strip preview with your selected design"></canvas><span id="strip-resolution">900 × 2700 · 300 dpi</span><button id="open-strip-preview" class="secondary" type="button" aria-haspopup="dialog">View full frame</button></div></div>
+      </section>
+      <button id="continue-camera" class="primary" type="button">Continue to camera</button>
+    </aside>
+    <aside id="preview-step" aria-label="Review your photos" hidden>
+      <div class="panel-heading"><div><span class="eyebrow">03 / PREVIEW</span><h2>Your little moments</h2></div></div>
+      <div id="review-preview-host" class="flow-preview-host"></div>
+      <div id="review-session-host"></div>
+      <div class="flow-actions"><button id="retake-photos" class="secondary" type="button">Retake photos</button><button id="continue-keep" class="primary" type="button" disabled>Continue to save / print</button></div>
+      <button id="preview-back-camera" class="quiet" type="button">Back to camera</button>
+    </aside>
+    <aside id="keep-step" aria-label="Download, save or print your photos" hidden>
+      <div id="keep-preview-host" class="flow-preview-host"></div>
+      <div class="keep-heading"><span class="eyebrow">04 / KEEP THE MEMORY</span><h2>A keepsake, just for you</h2></div>
+      <button id="save-strip" class="primary" disabled>Save photo strip</button>
+      <button id="share-strip" class="secondary" hidden disabled>Share / Save to Photos</button>
+      <p id="share-help" class="hint" hidden>Choose a destination in your device’s share sheet. Photos is available only if your device offers it.</p>
+      <p id="download-fallback" class="hint" hidden>File sharing is unavailable. Use Save photo strip to download the PNG.</p>
+      <details id="gallery-help" class="gallery-help" hidden>
+        <summary>How to add a downloaded image to your gallery</summary>
+        <p id="gallery-instructions"></p>
+      </details>
+      <p class="hint">Downloads the finished strip as a PNG to your device.</p>
+      <button id="save" class="primary" disabled>Download photo set</button>
+      <button id="save-folder" class="secondary" hidden disabled>Save to folder…</button>
+      <button id="print" class="secondary" disabled>Print photo strip</button>
+      <p class="hint">In the browser’s print dialog, choose your printer or Save as PDF from the destination list, where available. Use portrait paper, fit to page, and turn off browser headers and footers. If printing is unavailable, save the PNG and print it from another app.</p>
+      <button id="reset" class="quiet">Start a new strip</button>
+      <button id="back-preview" class="quiet" type="button">Back to preview</button>
+    </aside>
+    <p id="status" role="status" aria-live="polite">Choose your frame, colors, filter and theme, then continue to the camera.</p>
+  </main>
+  <footer><span>Photo processing stays in your browser.</span><span id="save-location">Session photos + print layout in one ZIP</span></footer>
+  <dialog id="frame-preview-dialog" aria-labelledby="frame-preview-title">
+    <div class="frame-preview-heading"><h2 id="frame-preview-title">Your full frame</h2><button id="close-strip-preview" type="button" class="quiet" aria-label="Close full frame preview" autofocus>Close</button></div>
+    <div class="full-frame-stage"><canvas id="full-frame-preview" role="img" aria-label="Full photo strip with selected filter, frame and theme"></canvas></div>
+    <p class="hint">Your entire frame, exactly as it will appear in the saved strip. Empty slots appear until you add your photos.</p>
+  </dialog>
+  <div id="print-area" aria-hidden="true"><img id="print-image" alt="Finished photo layout"><p id="print-notice">Fill the required photo slots for your template, then choose Print photo strip in the booth to prepare your finished design.</p></div>
+</body>
+</html>

@@ -1,0 +1,25 @@
+# Replace photobooth.example and certificate paths with your real HTTPS domain.
+# Start backend: python server.py --behind-proxy --public-url https://photobooth.example --no-browser
+server {
+    listen 80;
+    server_name photobooth.example;
+    return 301 https://photobooth.example$request_uri;
+}
+
+server {
+    listen 443 ssl;
+    server_name photobooth.example;
+    ssl_certificate /etc/letsencrypt/live/photobooth.example/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/photobooth.example/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+
+    location / {
+        proxy_pass http://127.0.0.1:8765;
+        # Preserve the browser's authority for the configured static site origin.
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        # The backend allows same-origin camera and web-share access.
+        # Do not override it with a policy that disables camera access.
+    }
+}
