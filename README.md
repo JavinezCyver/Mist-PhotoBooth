@@ -69,6 +69,17 @@ py -3 server.py --host 0.0.0.0 --port 8765 --cert "C:\certs\photobooth.pem" --ke
 
 Replace the example address with your certificate's real hostname/IP address, make sure it resolves to this computer, and open that address on the phone. Allow the chosen port through the computer's firewall if needed. Network access requires the explicit HTTPS configuration; the app never silently exposes the default local server. Only the configured address and same-origin save requests are accepted.
 
+## Publish on GitHub Pages
+
+The root `index.html` opens the photobooth in `web/`. Keep the root `index.html`, `.nojekyll`, and the complete `web/` folder in your GitHub repository.
+
+1. Commit and push these files to GitHub.
+2. Open the repository's **Settings > Pages**.
+3. Choose **Deploy from a branch**, select the branch containing these files, and choose **/ (root)**. Click **Save**.
+4. Open the HTTPS website address shown in Pages after deployment finishes. Share that website address with visitors.
+
+GitHub Pages serves the HTML, CSS, and JavaScript directly. Visitors do not need Python or the launcher. The existing browser camera, uploads, previews, downloads, and printing work from the hosted website; users allow camera access on their own devices.
+
 ## Development and HTTPS deployment
 
 For development, start the launcher and open `http://localhost:8765` or `http://127.0.0.1:8765`. Browsers allow camera access on these loopback HTTP origins. Camera permission is still requested only when **Open camera** is clicked.
