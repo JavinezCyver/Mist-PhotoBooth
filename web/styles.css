@@ -22,7 +22,105 @@ body {
   padding: 30px max(24px, calc((100vw - 1320px) / 2));
   background: radial-gradient(ellipse at 0 0, #efd0da70, transparent 50%), var(--white);
   min-height: 100vh;
+  isolation: isolate;
 }
+/* Keep ambient petals behind the booth, outside every saved photo and print. */
+body > header, body > main, body > footer { position: relative; z-index: 1; }
+.sakura-petals { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+.sakura-petals i {
+  position: absolute; top: -32px; left: var(--left); width: var(--size, 15px); height: var(--size, 15px);
+  animation: sakura-fall var(--duration, 20s) var(--delay, 0s) linear infinite;
+}
+.sakura-petals i::before {
+  content: ""; display: block; width: 100%; height: 100%;
+  border-radius: 85% 12% 75% 30%;
+  background: linear-gradient(135deg, #f7dbe5 15%, #e9abc2 65%, #cf87a3);
+  animation: sakura-flutter var(--flutter, 4s) var(--delay, 0s) ease-in-out infinite alternate;
+}
+.sakura-petals i:nth-child(1) { --left: 3%; --duration: 21s; --delay: -12s; --drift: 65px; }
+.sakura-petals i:nth-child(2) { --left: 9%; --duration: 27s; --delay: -4s; --size: 10px; --drift: -45px; }
+.sakura-petals i:nth-child(3) { --left: 15%; --duration: 19s; --delay: -16s; --size: 18px; --drift: 80px; }
+.sakura-petals i:nth-child(4) { --left: 21%; --duration: 24s; --delay: -9s; --drift: -55px; --flutter: 5s; }
+.sakura-petals i:nth-child(5) { --left: 27%; --duration: 28s; --delay: -22s; --size: 11px; --drift: 35px; }
+.sakura-petals i:nth-child(6) { --left: 33%; --duration: 22s; --delay: -7s; --drift: 75px; }
+.sakura-petals i:nth-child(7) { --left: 39%; --duration: 26s; --delay: -18s; --size: 12px; --drift: -60px; }
+.sakura-petals i:nth-child(8) { --left: 45%; --duration: 20s; --delay: -2s; --size: 17px; --drift: 50px; --flutter: 3s; }
+.sakura-petals i:nth-child(9) { --left: 51%; --duration: 29s; --delay: -13s; --drift: -40px; }
+.sakura-petals i:nth-child(10) { --left: 57%; --duration: 23s; --delay: -19s; --size: 10px; --drift: 85px; }
+.sakura-petals i:nth-child(11) { --left: 63%; --duration: 25s; --delay: -6s; --drift: -70px; --flutter: 5s; }
+.sakura-petals i:nth-child(12) { --left: 69%; --duration: 18s; --delay: -11s; --size: 18px; --drift: 40px; }
+.sakura-petals i:nth-child(13) { --left: 75%; --duration: 27s; --delay: -20s; --size: 11px; --drift: -55px; }
+.sakura-petals i:nth-child(14) { --left: 81%; --duration: 21s; --delay: -5s; --drift: 70px; --flutter: 3s; }
+.sakura-petals i:nth-child(15) { --left: 87%; --duration: 24s; --delay: -15s; --size: 17px; --drift: -65px; }
+.sakura-petals i:nth-child(16) { --left: 93%; --duration: 28s; --delay: -8s; --size: 12px; --drift: 25px; }
+.sakura-petals i:nth-child(17) { --left: 6%; --duration: 26s; --delay: -23s; --size: 13px; --drift: 90px; }
+.sakura-petals i:nth-child(18) { --left: 96%; --duration: 20s; --delay: -17s; --drift: -85px; }
+.sakura-petals i:nth-child(19) { --left: 1.5%; --duration: 19s; --delay: -1.0s; --size: 11px; --drift: 40px; --flutter: 3s; }
+.sakura-petals i:nth-child(20) { --left: 7.0%; --duration: 26s; --delay: -8.2s; --size: 14px; --drift: -51px; --flutter: 4s; }
+.sakura-petals i:nth-child(21) { --left: 12.5%; --duration: 22s; --delay: -12.7s; --size: 17px; --drift: 62px; --flutter: 5s; }
+.sakura-petals i:nth-child(22) { --left: 18.0%; --duration: 29s; --delay: -24.4s; --size: 11px; --drift: -73px; --flutter: 6s; }
+.sakura-petals i:nth-child(23) { --left: 23.5%; --duration: 25s; --delay: -5.3s; --size: 14px; --drift: 84px; --flutter: 3s; }
+.sakura-petals i:nth-child(24) { --left: 29.0%; --duration: 21s; --delay: -9.9s; --size: 17px; --drift: -95px; --flutter: 4s; }
+.sakura-petals i:nth-child(25) { --left: 34.5%; --duration: 28s; --delay: -20.6s; --size: 11px; --drift: 50px; --flutter: 5s; }
+.sakura-petals i:nth-child(26) { --left: 40.0%; --duration: 24s; --delay: -2.5s; --size: 14px; --drift: -61px; --flutter: 6s; }
+.sakura-petals i:nth-child(27) { --left: 45.5%; --duration: 20s; --delay: -7.4s; --size: 17px; --drift: 72px; --flutter: 3s; }
+.sakura-petals i:nth-child(28) { --left: 51.0%; --duration: 27s; --delay: -17.1s; --size: 11px; --drift: -83px; --flutter: 4s; }
+.sakura-petals i:nth-child(29) { --left: 56.5%; --duration: 23s; --delay: -20.6s; --size: 14px; --drift: 94px; --flutter: 5s; }
+.sakura-petals i:nth-child(30) { --left: 62.0%; --duration: 19s; --delay: -5.0s; --size: 17px; --drift: -49px; --flutter: 6s; }
+.sakura-petals i:nth-child(31) { --left: 67.5%; --duration: 26s; --delay: -13.7s; --size: 11px; --drift: 60px; --flutter: 3s; }
+.sakura-petals i:nth-child(32) { --left: 73.0%; --duration: 22s; --delay: -17.4s; --size: 14px; --drift: -71px; --flutter: 4s; }
+.sakura-petals i:nth-child(33) { --left: 78.5%; --duration: 29s; --delay: -4.6s; --size: 17px; --drift: 82px; --flutter: 5s; }
+.sakura-petals i:nth-child(34) { --left: 84.0%; --duration: 25s; --delay: -10.5s; --size: 11px; --drift: -93px; --flutter: 6s; }
+.sakura-petals i:nth-child(35) { --left: 89.5%; --duration: 21s; --delay: -14.4s; --size: 14px; --drift: 48px; --flutter: 3s; }
+.sakura-petals i:nth-child(36) { --left: 95.0%; --duration: 28s; --delay: -1.5s; --size: 17px; --drift: -59px; --flutter: 4s; }
+.sakura-petals i:nth-child(37) { --left: 1.0%; --duration: 18s; --delay: -0.49s; --size: 10px; --drift: 35px; --flutter: 3s; }
+.sakura-petals i:nth-child(38) { --left: 3.75%; --duration: 25s; --delay: -8.11s; --size: 15px; --drift: -48px; --flutter: 4s; }
+.sakura-petals i:nth-child(39) { --left: 6.5%; --duration: 19s; --delay: -11.81s; --size: 20px; --drift: 61px; --flutter: 5s; }
+.sakura-petals i:nth-child(40) { --left: 9.25%; --duration: 26s; --delay: -23.89s; --size: 14px; --drift: -74px; --flutter: 6s; }
+.sakura-petals i:nth-child(41) { --left: 12.0%; --duration: 20s; --delay: -5.41s; --size: 19px; --drift: 87px; --flutter: 3s; }
+.sakura-petals i:nth-child(42) { --left: 14.75%; --duration: 27s; --delay: -15.32s; --size: 13px; --drift: -100px; --flutter: 4s; }
+.sakura-petals i:nth-child(43) { --left: 17.5%; --duration: 21s; --delay: -18.16s; --size: 18px; --drift: 47px; --flutter: 5s; }
+.sakura-petals i:nth-child(44) { --left: 20.25%; --duration: 28s; --delay: -6.05s; --size: 12px; --drift: -60px; --flutter: 6s; }
+.sakura-petals i:nth-child(45) { --left: 23.0%; --duration: 22s; --delay: -11.3s; --size: 17px; --drift: 73px; --flutter: 3s; }
+.sakura-petals i:nth-child(46) { --left: 25.75%; --duration: 29s; --delay: -23.51s; --size: 11px; --drift: -86px; --flutter: 4s; }
+.sakura-petals i:nth-child(47) { --left: 28.5%; --duration: 23s; --delay: -3.73s; --size: 16px; --drift: 99px; --flutter: 5s; }
+.sakura-petals i:nth-child(48) { --left: 31.25%; --duration: 30s; --delay: -13.78s; --size: 10px; --drift: -46px; --flutter: 6s; }
+.sakura-petals i:nth-child(49) { --left: 34.0%; --duration: 24s; --delay: -18.16s; --size: 15px; --drift: 59px; --flutter: 3s; }
+.sakura-petals i:nth-child(50) { --left: 36.75%; --duration: 18s; --delay: -1.95s; --size: 20px; --drift: -72px; --flutter: 4s; }
+.sakura-petals i:nth-child(51) { --left: 39.5%; --duration: 25s; --delay: -10.14s; --size: 14px; --drift: 85px; --flutter: 5s; }
+.sakura-petals i:nth-child(52) { --left: 42.25%; --duration: 19s; --delay: -13.35s; --size: 19px; --drift: -98px; --flutter: 6s; }
+.sakura-petals i:nth-child(53) { --left: 45.0%; --duration: 26s; --delay: -1.41s; --size: 13px; --drift: 45px; --flutter: 3s; }
+.sakura-petals i:nth-child(54) { --left: 47.75%; --duration: 20s; --delay: -7.03s; --size: 18px; --drift: -58px; --flutter: 4s; }
+.sakura-petals i:nth-child(55) { --left: 50.5%; --duration: 27s; --delay: -17.51s; --size: 12px; --drift: 71px; --flutter: 5s; }
+.sakura-petals i:nth-child(56) { --left: 53.25%; --duration: 21s; --delay: -19.86s; --size: 17px; --drift: -84px; --flutter: 6s; }
+.sakura-petals i:nth-child(57) { --left: 56.0%; --duration: 28s; --delay: -8.32s; --size: 11px; --drift: 97px; --flutter: 3s; }
+.sakura-petals i:nth-child(58) { --left: 58.75%; --duration: 22s; --delay: -13.08s; --size: 16px; --drift: -44px; --flutter: 4s; }
+.sakura-petals i:nth-child(59) { --left: 61.5%; --duration: 29s; --delay: -25.86s; --size: 10px; --drift: 57px; --flutter: 5s; }
+.sakura-petals i:nth-child(60) { --left: 64.25%; --duration: 23s; --delay: -5.59s; --size: 15px; --drift: -70px; --flutter: 6s; }
+.sakura-petals i:nth-child(61) { --left: 67.0%; --duration: 30s; --delay: -16.22s; --size: 20px; --drift: 83px; --flutter: 3s; }
+.sakura-petals i:nth-child(62) { --left: 69.75%; --duration: 24s; --delay: -20.11s; --size: 14px; --drift: -96px; --flutter: 4s; }
+.sakura-petals i:nth-child(63) { --left: 72.5%; --duration: 18s; --delay: -3.41s; --size: 19px; --drift: 43px; --flutter: 5s; }
+.sakura-petals i:nth-child(64) { --left: 75.25%; --duration: 25s; --delay: -12.16s; --size: 13px; --drift: -56px; --flutter: 6s; }
+.sakura-petals i:nth-child(65) { --left: 78.0%; --duration: 19s; --delay: -14.89s; --size: 18px; --drift: 69px; --flutter: 3s; }
+.sakura-petals i:nth-child(66) { --left: 80.75%; --duration: 26s; --delay: -3.51s; --size: 12px; --drift: -82px; --flutter: 4s; }
+.sakura-petals i:nth-child(67) { --left: 83.5%; --duration: 20s; --delay: -8.65s; --size: 17px; --drift: 95px; --flutter: 5s; }
+.sakura-petals i:nth-child(68) { --left: 86.25%; --duration: 27s; --delay: -19.7s; --size: 11px; --drift: -42px; --flutter: 6s; }
+.sakura-petals i:nth-child(69) { --left: 89.0%; --duration: 21s; --delay: -1.7s; --size: 16px; --drift: 55px; --flutter: 3s; }
+.sakura-petals i:nth-child(70) { --left: 91.75%; --duration: 28s; --delay: -10.59s; --size: 10px; --drift: -68px; --flutter: 4s; }
+.sakura-petals i:nth-child(71) { --left: 94.5%; --duration: 22s; --delay: -14.86s; --size: 15px; --drift: 81px; --flutter: 5s; }
+.sakura-petals i:nth-child(72) { --left: 97.25%; --duration: 29s; --delay: -0.78s; --size: 20px; --drift: -94px; --flutter: 6s; }
+@keyframes sakura-fall {
+  0% { transform: translate3d(0, -20px, 0); opacity: 0; }
+  8% { opacity: .65; }
+  88% { opacity: .65; }
+  100% { transform: translate3d(var(--drift, 60px), calc(100vh + 64px), 0); opacity: 0; }
+}
+@keyframes sakura-flutter {
+  from { transform: translateX(-12px) rotate(-30deg) rotateY(0deg); }
+  to { transform: translateX(12px) rotate(90deg) rotateY(65deg); }
+}
+.petals-paused .sakura-petals i, .petals-paused .sakura-petals i::before { animation-play-state: paused; }
+#toggle-petals { font-size: 12px; padding: 8px 12px; flex-shrink: 0; }
 header { display: flex; justify-content: space-between; align-items: center; gap: 24px; margin-bottom: 28px; }
 h1, h2 { font-family: Georgia, "Yu Mincho", "Hiragino Mincho ProN", serif; font-weight: 400; }
 h1 { font-size: 56px; line-height: 1.1; letter-spacing: 3px; margin: 10px 0 0; }
@@ -239,6 +337,7 @@ footer { display: flex; justify-content: space-between; gap: 12px; font-size: 12
   }
 }
 @media (prefers-reduced-motion: reduce) {
+  .sakura-petals, #toggle-petals { display: none; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
 /* The printer's selected paper size is respected, with a quarter-inch margin. */

@@ -1,5 +1,7 @@
 # CHERYL Photobooth
 
+Soft sakura petals drift behind the booth panels. **Pause petals** in the footer stops the animation; **Resume petals** starts it again. The petals ignore clicks, stay out of saved photos and printing, and are hidden when your device requests reduced motion.
+
 A local browser photo booth with a real getUserMedia camera, live preview, selectable countdowns, template-aware photo slots, local saving, and printing.
 
 Double-click **Start PhotoBooth.bat** to open http://127.0.0.1:8765. Keep the launcher window open. Python 3.10 or newer is required; the web launcher uses only Python's standard library and installs no imaging dependencies.

@@ -31,6 +31,11 @@ const nextSlot = () => requiredIndices().find(index => !photos[index]);
 const requiredMessage = () => `Fill ${requiredIndices().length === 1 ? "the selected Polaroid photo slot" : "all four photo slots"} before saving or printing.`;
 const cameraReady = () => stream?.getVideoTracks().some(track => track.readyState === "live" && !track.muted) && video.readyState >= 2 && video.videoWidth > 0 && video.videoHeight > 0;
 const status = (text) => { $("status").textContent = text; };
+$("toggle-petals").addEventListener("click", () => {
+  const paused = document.body.classList.toggle("petals-paused");
+  $("toggle-petals").setAttribute("aria-pressed", String(paused));
+  $("toggle-petals").textContent = paused ? "Resume petals" : "Pause petals";
+});
 let cameraPreviewFrame = null;
 let lastPreviewTime = 0;
 let photoPreviewGeneration = 0;
