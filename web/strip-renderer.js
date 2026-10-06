@@ -3,7 +3,10 @@
   const templates = {
     classic: { name: "Classic strip", width: 900, height: 2700, count: 4, slots: Array.from({length:4}, (_, index) => ({ x:75, y:120 + index * 570, width:750, height:540, index })) },
     grid: { name: "Four-photo grid", width: 1800, height: 1800, count: 4, slots: Array.from({length:4}, (_, index) => ({ x:120 + index % 2 * 810, y:130 + Math.floor(index / 2) * 720, width:750, height:660, index })) },
-    polaroid: { name: "Single Polaroid", width: 1200, height: 1500, count: 1, slots: [{ x:100, y:90, width:1000, height:1000, index:0 }] }
+    polaroid: { name: "Single Polaroid", width: 1200, height: 1500, count: 1, slots: [{ x:100, y:90, width:1000, height:1000, index:0 }] },
+    double: { name: "Double strip", width: 1800, height: 3000, count: 4, slots: Array.from({length:4}, (_, index) => ({x:100 + Math.floor(index / 2) * 850, y:120 + index % 2 * 1300, width:750, height:1240, index})) },
+    landscape: { name: "Panorama row", width: 2700, height: 1000, count: 4, slots: Array.from({length:4}, (_, index) => ({x:90 + index * 640, y:110, width:600, height:600, index})) },
+    collage: { name: "Spotlight collage", width: 1800, height: 2400, count: 4, slots: [{x:120,y:120,width:1560,height:1020,index:0}, ...Array.from({length:3}, (_, index) => ({x:120 + index * 540,y:1220,width:480,height:900,index:index + 1}))] }
   };
   function layout(template, sheet = false, photoIndex = 0) {
     const source = templates[template] || templates.classic;
@@ -176,6 +179,53 @@
         context.restore();
       }
     }
+    if (["daisy", "clouds", "rainbow", "butterfly", "citrus", "music"].includes(theme)) {
+      context.strokeStyle = ink; context.fillStyle = ink; context.lineWidth = 3;
+      for (const x of [35, width - 35]) for (let y = 160; y < height - 230; y += 180) {
+        context.save(); context.translate(x, y);
+        if (theme === "daisy") {
+          context.fillStyle = "#fffaf0";
+          for (let petal = 0; petal < 8; petal++) {
+            context.save(); context.rotate(petal * Math.PI / 4);
+            context.beginPath(); context.ellipse(0, -18, 7, 14, 0, 0, Math.PI * 2); context.fill(); context.restore();
+          }
+          context.fillStyle = "#e1ad3f"; context.beginPath(); context.arc(0, 0, 9, 0, Math.PI * 2); context.fill();
+        } else if (theme === "clouds") {
+          context.fillStyle = light ? "#ffffff" : "#e0eafa";
+          for (const [cx,cy,r] of [[-17,7,13],[0,-4,19],[19,7,13]]) {
+            context.beginPath(); context.arc(cx, cy, r, 0, Math.PI * 2); context.fill();
+          }
+          context.fillRect(-17, 7, 36, 12);
+          context.fillStyle = ink; context.beginPath(); context.arc(0, 58, 3, 0, Math.PI * 2); context.fill();
+        } else if (theme === "rainbow") {
+          context.lineWidth = 6;
+          for (const [index,color] of ["#c77290", "#e4af59", "#80a796", "#899cca"].entries()) {
+            context.strokeStyle = color; context.beginPath(); context.arc(0, 16, 29-index*7, Math.PI, Math.PI*2); context.stroke();
+          }
+        } else if (theme === "butterfly") {
+          context.fillStyle = light ? "#9a75af" : "#ddd0ef";
+          for (const direction of [-1, 1]) {
+            context.beginPath(); context.ellipse(direction*15,-9,13,20,direction*.5,0,Math.PI*2); context.fill();
+            context.beginPath(); context.ellipse(direction*12,15,10,13,-direction*.5,0,Math.PI*2); context.fill();
+          }
+          context.strokeStyle = ink; context.lineWidth = 3;
+          context.beginPath(); context.moveTo(0,-17); context.lineTo(0,28); context.moveTo(0,-17); context.lineTo(-7,-28); context.moveTo(0,-17); context.lineTo(7,-28); context.stroke();
+        } else if (theme === "citrus") {
+          context.fillStyle = "#e9b541"; context.beginPath(); context.arc(0,0,27,0,Math.PI*2); context.fill();
+          context.strokeStyle = "#fff3df"; context.lineWidth = 2;
+          context.beginPath(); context.arc(0,0,21,0,Math.PI*2); context.stroke();
+          for (let segment=0;segment<8;segment++) {
+            context.beginPath(); context.moveTo(0,0);context.lineTo(Math.cos(segment*Math.PI/4)*21,Math.sin(segment*Math.PI/4)*21);context.stroke();
+          }
+        } else {
+          context.beginPath();context.ellipse(-10,20,10,7,-.3,0,Math.PI*2);context.fill();
+          context.beginPath();context.ellipse(18,11,10,7,-.3,0,Math.PI*2);context.fill();
+          context.fillRect(-3,-24,4,43);context.fillRect(25,-33,4,43);
+          context.beginPath();context.moveTo(-3,-24);context.lineTo(29,-33);context.lineTo(29,-23);context.lineTo(-3,-14);context.closePath();context.fill();
+        }
+        context.restore();
+      }
+    }
     context.restore();
   }
   async function render(photos, style, sheet = false, { maxDimension } = {}) {
@@ -223,7 +273,13 @@
       love: { title: "Love", caption: "Sweet little hearts" },
       hoshi: { title: "Hoshi 星", caption: "Written in the stars" },
       ribbon: { title: "Ribbon", caption: "Tied with a bow" },
-      retro: { title: "Retro", caption: "Good old days" }
+      retro: { title: "Retro", caption: "Good old days" },
+      daisy: { title: "Daisy", caption: "Fresh little blooms" },
+      clouds: { title: "Clouds", caption: "Daydream together" },
+      rainbow: { title: "Rainbow", caption: "A little color, a little joy" },
+      butterfly: { title: "Butterfly", caption: "Wings of wonder" },
+      citrus: { title: "Citrus", caption: "Sunshine in a frame" },
+      music: { title: "Music", caption: "Our favorite melody" }
     };
     const theme = themes[style.theme] || themes.none;
     context.font = `600 ${sheet ? 28 : 34}px Georgia, "Yu Mincho", serif`;

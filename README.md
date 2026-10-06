@@ -1,4 +1,4 @@
-# MIST Photobooth
+# CHERYL Photobooth
 
 A local browser photo booth with a real getUserMedia camera, live preview, selectable countdowns, template-aware photo slots, local saving, and printing.
 
@@ -20,7 +20,7 @@ The implemented design lives in `web/styles.css`: mist pink (#EFD0DA), soft whit
 
 Phone, iPad, and desktop layouts show one step at a time. Phone landscape uses a shorter preview sized to the screen height. Form inputs use 16px text on smaller screens, touch controls remain at least 44px, and safe-area spacing accommodates screen cutouts. `node test_browser.mjs --design-only` checks 15 phone/iPad portrait and landscape sizes and writes desktop, phone, and iPad screenshots.
 
-Dropdowns use the MIST palette through `web/app.js`: rounded soft-white menus, mist-pink selected options, dusty-rose borders, and selection checkmarks. They support arrow keys, Home/End, typing to find an option, Enter/Space to select, Escape to cancel, and outside-click dismissal. Camera-device options update dynamically and do not request camera permission until Open camera is chosen. Menu checks run with the design tests; `design-dropdown-preview.png` shows the open filter menu.
+Dropdowns use the CHERYL palette through `web/app.js`: rounded soft-white menus, mist-pink selected options, dusty-rose borders, and selection checkmarks. They support arrow keys, Home/End, typing to find an option, Enter/Space to select, Escape to cancel, and outside-click dismissal. Camera-device options update dynamically and do not request camera permission until Open camera is chosen. Menu checks run with the design tests; `design-dropdown-preview.png` shows the open filter menu.
 
 ## Save a finished photo strip
 
@@ -49,13 +49,15 @@ All camera capture, uploaded-image decoding, resizing, filters, framing, decorat
 
 ## Templates, colors, and themes
 
-The design and finished-preview controls offer 14 themes and 13 filters. New themes include Umi (ocean waves), Mori (leafy sprigs), Love (hearts), Hoshi (stars), Ribbon (bows), and Retro (checkerboards). New filters include Warm glow, Cool breeze, Peach, Lavender, Faded film, and Vivid. Each works with Classic, Grid, and Polaroid layouts, and the same styling appears in saved and printed output.
+The design and finished-preview controls offer 20 themes, 6 templates, and 13 filters. Template and theme are separate selections: changing the template rearranges the photos while preserving the theme, and changing the theme decorates the frame while preserving the layout. Every theme works with every template. The latest themes are Daisy, Clouds, Rainbow, Butterfly, Citrus, and Music, alongside the existing Japanese, nature, heart, ribbon, and retro designs.
+
+The latest templates are **Double strip** (two columns of two portrait photos, 1800 × 3000), **Panorama** (four square photos in one horizontal row, 2700 × 1000), and **Spotlight** (a large first photo above three smaller portraits, 1800 × 2400). All three use the four session photos, preserve them when switching layouts, and save at 300 dpi. Run `node test_browser.mjs --layouts-only` to check all 120 theme/template combinations, independent selection, exported dimensions, and responsive controls.
 
 Select a template using its rendered thumbnail. Classic uses four vertically stacked photos; Grid uses a 2x2 arrangement; Single Polaroid uses one selected session photo. Switching templates never deletes session photos. Choose a different photo in the Polaroid photo dropdown, or return to Classic/Grid to use all four. Exports stay disabled until every required photo is ready.
 
 Frame presets are Mist pink (#EFD0DA), Cream (#FFF3DF), Lilac (#DDD0EF), Sky blue (#CDE6F5), and Midnight (#292839). The custom color picker accepts any color; the selected preset or custom hex value is labeled. Template thumbnails and the live frame update with color/theme changes.
 
-Theme cards also set the frame text: **Minimal / Simply you**, **Sakura ? / Cherry blossom**, **Tokyo ?? / City postcards**, and **Kyoto ?? / Quiet moments**. The selected title replaces MIST PHOTOBOOTH, and its caption appears alongside the session date in previews, saved images, and print layouts.
+Theme cards also set the frame text: **Minimal / Simply you**, **Sakura ? / Cherry blossom**, **Tokyo ?? / City postcards**, and **Kyoto ?? / Quiet moments**. The selected title replaces CHERYL PHOTOBOOTH, and its caption appears alongside the session date in previews, saved images, and print layouts.
 
 Minimal keeps the frame quiet. Sakura adds cherry blossoms, fine branches, and pink accents. Tokyo adds Japanese postcard typography, clean double borders, and a postal stamp. Kyoto adds restrained seigaiha-inspired wave patterns and a small seal. Decorations are clipped to frame space outside all photo areas and Polaroid cards. The exact same decorated high-resolution PNG is used for saving and printing.
 
@@ -106,7 +108,7 @@ Manual launch: `py -3 server.py`. Open `http://127.0.0.1:8765`. Use `--port 8766
 
 The app uses static HTML/CSS/JavaScript and Python's standard-library server; there is no npm build step. Syntax checks are `node --check web/app.js`, `node --check web/filters.js`, `node --check web/strip-renderer.js`, `node --check web/local-save.js`, and `py -3 -m py_compile server.py`.
 
-Accessibility checks cover keyboard focus, named controls, 44px active touch targets, reduced-motion behavior, text contrast, and absence of horizontal overflow from 320px to 1440px. The SVG favicon uses the MIST palette. Capture tests use the real webcam; the 3-second delay is timed in real time, while 5/10-second stepping is tested using accelerated timers that verify every requested 1000ms interval. Countdown, retake, replacement, cancellation, and duplicate-click checks preserve session photos as intended.
+Accessibility checks cover keyboard focus, named controls, 44px active touch targets, reduced-motion behavior, text contrast, and absence of horizontal overflow from 320px to 1440px. The SVG favicon uses the CHERYL palette. Capture tests use the real webcam; the 3-second delay is timed in real time, while 5/10-second stepping is tested using accelerated timers that verify every requested 1000ms interval. Countdown, retake, replacement, cancellation, and duplicate-click checks preserve session photos as intended.
 
 Run static-server checks with `py -3 -m unittest test_server -v`. Run `node test_browser.mjs` for Chrome integration checks using the real webcam and automated permission approval. Browser image-validation tests use Pillow from the development `.venv`; the application server itself requires no third-party dependencies. The browser test also simulates phone camera metadata to check front/back requests, release of the previous stream, mirroring, unavailable-camera recovery, and a 390px portrait layout. HTTPS tests use a temporary test certificate when OpenSSL is installed. A physical phone is needed to confirm device-specific camera and print behavior. The app never substitutes a fake camera.
 

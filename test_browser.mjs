@@ -139,6 +139,58 @@ with zipfile.ZipFile(sys.argv[1]) as archive:
     assert.deepEqual(errors, []);
     console.log('Theme selection at 4x CPU slowdown:', JSON.stringify(metrics));
     console.log('PASS: rapid theme selection keeps the final frame preview and selected card in sync.');
+  } else if (process.argv.includes('--layouts-only')) {
+    assert.equal(await evaluate(`(async () => {
+      const cards = Array.from(document.querySelectorAll('.theme-choice'));
+      const templates = Object.keys(PhotoBoothStrip.templates);
+      if (cards.length !== 20 || templates.length !== 6) return false;
+      const colors = ['#ee3333','#33aa33','#3355ee','#dda033'];
+      const sources = await Promise.all(colors.map(async color => {
+        const canvas = document.createElement('canvas'); canvas.width=80;canvas.height=80;
+        canvas.getContext('2d').fillStyle=color;canvas.getContext('2d').fillRect(0,0,80,80);return toBlob(canvas);
+      }));
+      const files = sources.map((blob,index)=>new File([blob],'photo'+index+'.png',{type:'image/png'}));
+      document.getElementById('continue-camera').click();await uploadImages(files);
+      const originals=photos.map(photo=>photo.url);
+      for (const template of templates) {
+        document.querySelector('[data-template='+template+']').click();
+        const geometry=PhotoBoothStrip.layout(template,false,0);
+        const plain=await PhotoBoothStrip.render(sources,{...stripStyle(),theme:'none'},false,{maxDimension:300});
+        const designs=new Set([plain.toDataURL()]);
+        for (const card of cards) {
+          card.click();
+          if (document.getElementById('strip-template').value!==template) throw new Error('Theme changed the layout');
+          const style=stripStyle();
+          const output=await PhotoBoothStrip.render(sources,style,false,{maxDimension:300});
+          const context=output.getContext('2d');const scale=output.width/geometry.width;
+          for (const slot of geometry.slots) {
+            const pixel=context.getImageData(Math.floor((slot.x+slot.width/2)*scale),Math.floor((slot.y+slot.height/2)*scale),1,1).data;
+            const expected=colors[slot.index].match(/[a-f0-9]{2}/gi).map(hex=>parseInt(hex,16));
+            if (expected.some((channel,index)=>channel!==pixel[index])) throw new Error(template+'/'+card.dataset.theme+' covered a photo');
+          }
+          designs.add(output.toDataURL());
+          if (!photos.every((photo,index)=>photo.url===originals[index])) throw new Error('Lost source photos');
+        }
+        if (designs.size!==20) throw new Error('Theme decorations are not distinct on '+template);
+      }
+      document.querySelector('[data-theme=music]').click();
+      for (const template of ['double','landscape','collage']) {
+        document.querySelector('[data-template='+template+']').click();
+        if(document.getElementById('strip-theme').value!=='music') throw new Error('Layout changed the theme');
+        await sleep(100);await renderStripPreview();
+        const exported=await prepareStripExport(); const expected=PhotoBoothStrip.templates[template];
+        const image=await createImageBitmap(exported.png);
+        const correct=image.width===expected.width && image.height===expected.height;
+        image.close();if(!correct) throw new Error('Wrong export dimensions for '+template);
+      }
+      return true;
+    })()`),true,'Every theme works independently with every layout and preserves photos and export dimensions');
+    for(const [width,height] of [[320,568],[390,844],[820,1180],[1440,1100]]) {
+      await command('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<1100});
+      assert.equal(await evaluate('document.documentElement.scrollWidth<=innerWidth'),true,`Layout choices overflow at ${width}x${height}`);
+    }
+    assert.deepEqual(errors,[]);
+    console.log('PASS: all 120 theme/template combinations, independent selections, photo preservation, new layout PNG dimensions and responsive controls.');
   } else if (process.argv.includes('--flow-only')) {
     const action = (expression, gesture = false) => evaluate(`(async () => { ${expression} })()`, gesture);
     const visibleStep = () => evaluate(`Array.from(document.querySelectorAll('main > section, main > aside')).filter(panel => !panel.hidden).map(panel => panel.id)`);
@@ -148,13 +200,13 @@ with zipfile.ZipFile(sys.argv[1]) as archive:
       const labels = [];
       CanvasRenderingContext2D.prototype.fillText = function(text, ...args) { labels.push(text); return original.call(this, text, ...args); };
       try {
-        for (const [theme, title, caption] of [["none", "Minimal ミニマル", "Simply you"], ["sakura", "Sakura 桜", "Cherry blossom"], ["tokyo", "Tokyo 東京", "City postcards"], ["kyoto", "Kyoto 京都", "Quiet moments"], ["osaka", "Osaka 大阪", "City lights"], ["hokkaido", "Hokkaido 北海道", "Snowy memories"], ["hanabi", "Hanabi 花火", "Summer fireworks"], ["tsuki", "Tsuki 月", "Moonlit moments"], ["umi", "Umi 海", "Ocean breeze"], ["mori", "Mori 森", "Forest whispers"], ["love", "Love", "Sweet little hearts"], ["hoshi", "Hoshi 星", "Written in the stars"], ["ribbon", "Ribbon", "Tied with a bow"], ["retro", "Retro", "Good old days"]]) {
+        for (const [theme, title, caption] of [["none", "Minimal ミニマル", "Simply you"], ["sakura", "Sakura 桜", "Cherry blossom"], ["tokyo", "Tokyo 東京", "City postcards"], ["kyoto", "Kyoto 京都", "Quiet moments"], ["osaka", "Osaka 大阪", "City lights"], ["hokkaido", "Hokkaido 北海道", "Snowy memories"], ["hanabi", "Hanabi 花火", "Summer fireworks"], ["tsuki", "Tsuki 月", "Moonlit moments"], ["umi", "Umi 海", "Ocean breeze"], ["mori", "Mori 森", "Forest whispers"], ["love", "Love", "Sweet little hearts"], ["hoshi", "Hoshi 星", "Written in the stars"], ["ribbon", "Ribbon", "Tied with a bow"], ["retro", "Retro", "Good old days"], ["daisy", "Daisy", "Fresh little blooms"], ["clouds", "Clouds", "Daydream together"], ["rainbow", "Rainbow", "A little color, a little joy"], ["butterfly", "Butterfly", "Wings of wonder"], ["citrus", "Citrus", "Sunshine in a frame"], ["music", "Music", "Our favorite melody"]]) {
           document.querySelector('[data-theme="' + theme + '"]').click();
           if (document.getElementById('strip-theme').value !== theme) return false;
-          for (const template of ['classic','grid','polaroid']) {
+          for (const template of Object.keys(PhotoBoothStrip.templates)) {
             labels.length = 0;
             await PhotoBoothStrip.render(Array(4).fill(null), {...stripStyle(), template});
-            if (!labels.includes(title) || !labels.some(label => label.startsWith(caption + '  /  ')) || labels.includes('MIST PHOTOBOOTH')) return false;
+            if (!labels.includes(title) || !labels.some(label => label.startsWith(caption + '  /  ')) || labels.includes('CHERYL PHOTOBOOTH')) return false;
           }
         }
         return true;
@@ -166,7 +218,7 @@ with zipfile.ZipFile(sys.argv[1]) as archive:
         const source=document.createElement('canvas'); source.width=width; source.height=height;
         const context=source.getContext('2d'); context.fillStyle='#1248a0'; context.fillRect(0,0,width,height);
         const blob=await toBlob(source);
-        for (const template of ['classic','grid','polaroid']) for (const sheet of [false,true]) {
+        for (const template of Object.keys(PhotoBoothStrip.templates)) for (const sheet of [false,true]) {
           const canvas=await PhotoBoothStrip.render([blob,blob,blob,blob], {...stripStyle(),template,theme:'none',filter:'original'},sheet);
           for (const slot of PhotoBoothStrip.layout(template,sheet,0).slots) {
             for (const [x,y] of [[slot.x+2,slot.y+2],[slot.x+slot.width-3,slot.y+2],[slot.x+2,slot.y+slot.height-3],[slot.x+slot.width-3,slot.y+slot.height-3]]) {
@@ -303,7 +355,7 @@ with zipfile.ZipFile(sys.argv[1]) as archive:
       return true;
     })()`), true, 'All themed dropdowns must update countdown, theme, Polaroid slot and dynamic device selection without requesting camera permission');
     const checkDesign = async () => {
-      assert.equal(await evaluate(`getComputedStyle(document.documentElement).backgroundColor === 'rgb(251, 245, 247)' && document.title === 'MIST Photobooth'`), true, 'MIST branding and soft white stylesheet must load');
+      assert.equal(await evaluate(`getComputedStyle(document.documentElement).backgroundColor === 'rgb(251, 245, 247)' && document.title === 'CHERYL Photobooth'`), true, 'CHERYL branding and soft white stylesheet must load');
       assert.equal(await evaluate(`getComputedStyle(document.querySelector('.viewfinder')).borderRadius === '24px' && getComputedStyle(document.querySelector('main')).display === 'grid' && getComputedStyle(document.getElementById('capture')).backgroundColor === 'rgb(237, 222, 228)' && document.querySelector('aside #design-controls') !== null`), true, 'Rounded camera, responsive grid and customization sidebar must be styled');
     };
     await command('Emulation.setDeviceMetricsOverride', { width: 1440, height: 1100, deviceScaleFactor: 1, mobile: false });
@@ -430,8 +482,8 @@ with zipfile.ZipFile(sys.argv[1]) as archive:
   assert.deepEqual(await evaluate(`Array.from(document.getElementById('capture-delay').options, option => option.textContent)`), ['Off','3 seconds','5 seconds','10 seconds']);
   await evaluate('window.__uploadFiles(4).then(uploadImages)');
   assert.equal(await evaluate('complete() && photos[0].url === window.__firstUploadUrl && !document.getElementById("save").disabled && !document.getElementById("print").disabled && document.getElementById("status").textContent.includes("extra image")'), true);
-  assert.deepEqual(await evaluate(`Array.from(document.querySelectorAll('.template-choice'), button => button.dataset.template)`), ['classic','grid','polaroid']);
-  assert.deepEqual(await evaluate(`Array.from(document.getElementById('strip-theme').options, option => option.textContent)`), ['Minimal ミニマル', 'Sakura 桜', 'Tokyo 東京', 'Kyoto 京都', 'Osaka 大阪', 'Hokkaido 北海道', 'Hanabi 花火', 'Tsuki 月', 'Umi 海', 'Mori 森', 'Love', 'Hoshi 星', 'Ribbon', 'Retro']);
+  assert.deepEqual(await evaluate(`Array.from(document.querySelectorAll('.template-choice'), button => button.dataset.template)`), ['classic','grid','polaroid','double','landscape','collage']);
+  assert.deepEqual(await evaluate(`Array.from(document.getElementById('strip-theme').options, option => option.textContent)`), ['Minimal ミニマル', 'Sakura 桜', 'Tokyo 東京', 'Kyoto 京都', 'Osaka 大阪', 'Hokkaido 北海道', 'Hanabi 花火', 'Tsuki 月', 'Umi 海', 'Mori 森', 'Love', 'Hoshi 星', 'Ribbon', 'Retro', 'Daisy', 'Clouds', 'Rainbow', 'Butterfly', 'Citrus', 'Music']);
   assert.equal(await evaluate(`(async () => {
     const urls = photos.map(photo => photo.url);
     for (const template of ['polaroid','grid','classic']) {
@@ -458,7 +510,7 @@ with zipfile.ZipFile(sys.argv[1]) as archive:
       const context = canvas.getContext('2d'); context.fillStyle = color; context.fillRect(0,0,32,32); sources.push(await toBlob(canvas));
     }
     const centerColors = [[238,51,51],[51,170,51],[51,85,238],[221,160,51]];
-    for (const template of ['classic','grid','polaroid']) {
+    for (const template of Object.keys(PhotoBoothStrip.templates)) {
       const style = {...stripStyle(),template,filter:'original',frameColor:'#efd0da',photoIndex:2,theme:'none'};
       const geometry = PhotoBoothStrip.layout(template, false, 2);
       const base = await PhotoBoothStrip.render(sources,style);
@@ -470,7 +522,7 @@ with zipfile.ZipFile(sys.argv[1]) as archive:
         if (centerColors[slot.index].some((value,index) => pixel[index] !== value)) return false;
       }
       const designs = new Set([base.toDataURL()]);
-      for (const theme of ['sakura','tokyo','kyoto','osaka','hokkaido','hanabi','tsuki','umi','mori','love','hoshi','ribbon','retro']) {
+      for (const theme of ['sakura','tokyo','kyoto','osaka','hokkaido','hanabi','tsuki','umi','mori','love','hoshi','ribbon','retro','daisy','clouds','rainbow','butterfly','citrus','music']) {
         const output = await PhotoBoothStrip.render(sources,{...style,theme});
         const context = output.getContext('2d');
         if (PhotoBoothFiles.crc32(context.getImageData(0,100,60,geometry.height - 350).data) === plainMargin) return false;
@@ -481,7 +533,7 @@ with zipfile.ZipFile(sys.argv[1]) as archive:
         const decoded = PhotoBoothFilters.draw(image,image.width,image.height,'original'); image.close();
         if (decoded.toDataURL() !== output.toDataURL()) return false;
       }
-      if (designs.size !== 14) return false;
+      if (designs.size !== 20) return false;
     }
     return true;
   })()`), true, 'Themes must visibly alter every template, survive PNG encoding, and leave all photo pixels untouched');

@@ -4,16 +4,16 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#EFD0DA">
-  <title>MIST Photobooth</title>
+  <title>CHERYL Photobooth</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=20261006-retake-only">
+  <link rel="stylesheet" href="styles.css?v=20261006-mobile-theme">
   <script src="local-save.js" defer></script>
-  <script src="filters.js?v=20261006-options" defer></script>
-  <script src="strip-renderer.js?v=20261006-options" defer></script>
-  <script src="app.js?v=20261006-retake-only" defer></script>
+  <script src="filters.js?v=20261006-more-designs" defer></script>
+  <script src="strip-renderer.js?v=20261006-more-designs" defer></script>
+  <script src="app.js?v=20261006-more-designs" defer></script>
 </head>
 <body>
-  <header><div><span class="eyebrow">LITTLE MOMENTS, SOFTLY KEPT</span><h1>MIST <span>Photobooth</span></h1></div><p><span lang="ja">小さな思い出</span><br>A little moment, yours to keep.</p></header>
+  <header><div><span class="eyebrow">LITTLE MOMENTS, SOFTLY KEPT</span><h1>CHERYL <span>Photobooth</span></h1></div><p><span lang="ja">小さな思い出</span><br>A little moment, yours to keep.</p></header>
   <main class="booth-flow" data-step="design">
     <section id="camera-step" class="camera-panel" aria-label="Live camera" hidden>
       <div class="panel-heading"><div><span class="eyebrow">02 / CAPTURE</span><h2>A moment for you</h2></div><span class="session-tag">Your cozy corner</span></div>
@@ -56,12 +56,15 @@
           <div id="design-options-host"><div id="shared-design-options">
           <div id="design-controls" class="design-controls">
             <label>Filter<select id="strip-filter" aria-describedby="selected-filter"><option value="original">Original</option><option value="bw">Black &amp; White</option><option value="mono">Mono</option><option value="vintage">Vintage</option><option value="sepia">Sepia</option><option value="rosy">Rosy</option><option value="soft">Soft</option><option value="warm">Warm glow</option><option value="cool">Cool breeze</option><option value="peach">Peach</option><option value="lavender">Lavender</option><option value="faded">Faded film</option><option value="vivid">Vivid</option></select></label>
-            <div class="template-controls"><span class="control-label">Template</span>
-              <select id="strip-template" hidden aria-label="Template"><option value="classic">Classic strip</option><option value="grid">Four-photo grid</option><option value="polaroid">Single Polaroid</option></select>
+            <div class="template-controls"><span class="control-label">Template</span><p class="hint">Choose how your photos are arranged. Pair any layout with any theme.</p>
+              <select id="strip-template" hidden aria-label="Template"><option value="classic">Classic strip</option><option value="grid">Four-photo grid</option><option value="polaroid">Single Polaroid</option><option value="double">Double strip</option><option value="landscape">Panorama row</option><option value="collage">Spotlight collage</option></select>
               <div class="template-choices" role="group" aria-label="Choose a template">
                 <button type="button" class="template-choice" data-template="classic" aria-pressed="true"><canvas aria-hidden="true"></canvas><span>Classic</span><small>4 photos</small></button>
                 <button type="button" class="template-choice" data-template="grid" aria-pressed="false"><canvas aria-hidden="true"></canvas><span>2 × 2 grid</span><small>4 photos</small></button>
                 <button type="button" class="template-choice" data-template="polaroid" aria-pressed="false"><canvas aria-hidden="true"></canvas><span>Polaroid</span><small>1 photo</small></button>
+                <button type="button" class="template-choice" data-template="double" aria-pressed="false"><canvas aria-hidden="true"></canvas><span>Double strip</span><small>4 photos</small></button>
+                <button type="button" class="template-choice" data-template="landscape" aria-pressed="false"><canvas aria-hidden="true"></canvas><span>Panorama</span><small>4 photos</small></button>
+                <button type="button" class="template-choice" data-template="collage" aria-pressed="false"><canvas aria-hidden="true"></canvas><span>Spotlight</span><small>4 photos</small></button>
               </div>
             </div>
             <label id="polaroid-photo-label" hidden>Polaroid photo<select id="polaroid-photo"><option value="0">Photo 1</option><option value="1">Photo 2</option><option value="2">Photo 3</option><option value="3">Photo 4</option></select></label>
@@ -76,7 +79,7 @@
               <label class="custom-color">Custom color<input id="frame-color" type="color" value="#EFD0DA"></label>
               <span id="color-name" class="selection-note">Mist pink · #EFD0DA</span>
             </div>
-            <div class="theme-controls"><span class="control-label">Theme</span><label hidden>Theme<select id="strip-theme" aria-describedby="theme-description"><option value="none">Minimal ミニマル</option><option value="sakura">Sakura 桜</option><option value="tokyo">Tokyo 東京</option><option value="kyoto">Kyoto 京都</option><option value="osaka">Osaka 大阪</option><option value="hokkaido">Hokkaido 北海道</option><option value="hanabi">Hanabi 花火</option><option value="tsuki">Tsuki 月</option><option value="umi">Umi 海</option><option value="mori">Mori 森</option><option value="love">Love</option><option value="hoshi">Hoshi 星</option><option value="ribbon">Ribbon</option><option value="retro">Retro</option></select></label>
+            <div class="theme-controls"><span class="control-label">Theme</span><p class="hint">Choose decorations for your frame. Your photo layout stays the same.</p><label hidden>Theme<select id="strip-theme" aria-describedby="theme-description"><option value="none">Minimal ミニマル</option><option value="sakura">Sakura 桜</option><option value="tokyo">Tokyo 東京</option><option value="kyoto">Kyoto 京都</option><option value="osaka">Osaka 大阪</option><option value="hokkaido">Hokkaido 北海道</option><option value="hanabi">Hanabi 花火</option><option value="tsuki">Tsuki 月</option><option value="umi">Umi 海</option><option value="mori">Mori 森</option><option value="love">Love</option><option value="hoshi">Hoshi 星</option><option value="ribbon">Ribbon</option><option value="retro">Retro</option><option value="daisy">Daisy</option><option value="clouds">Clouds</option><option value="rainbow">Rainbow</option><option value="butterfly">Butterfly</option><option value="citrus">Citrus</option><option value="music">Music</option></select></label>
               <div class="theme-choices" role="group" aria-label="Choose a theme">
                 <button type="button" class="theme-choice" data-theme="none" aria-pressed="true"><span>Minimal ミニマル</span><small>Simply you</small></button>
                 <button type="button" class="theme-choice" data-theme="sakura" aria-pressed="false"><span>Sakura 桜</span><small>Cherry blossom</small></button>
@@ -92,6 +95,12 @@
                 <button type="button" class="theme-choice" data-theme="hoshi" aria-pressed="false"><span>Hoshi 星</span><small>Written in the stars</small></button>
                 <button type="button" class="theme-choice" data-theme="ribbon" aria-pressed="false"><span>Ribbon</span><small>Tied with a bow</small></button>
                 <button type="button" class="theme-choice" data-theme="retro" aria-pressed="false"><span>Retro</span><small>Good old days</small></button>
+                <button type="button" class="theme-choice" data-theme="daisy" aria-pressed="false"><span>Daisy</span><small>Fresh little blooms</small></button>
+                <button type="button" class="theme-choice" data-theme="clouds" aria-pressed="false"><span>Clouds</span><small>Daydream together</small></button>
+                <button type="button" class="theme-choice" data-theme="rainbow" aria-pressed="false"><span>Rainbow</span><small>A little color, a little joy</small></button>
+                <button type="button" class="theme-choice" data-theme="butterfly" aria-pressed="false"><span>Butterfly</span><small>Wings of wonder</small></button>
+                <button type="button" class="theme-choice" data-theme="citrus" aria-pressed="false"><span>Citrus</span><small>Sunshine in a frame</small></button>
+                <button type="button" class="theme-choice" data-theme="music" aria-pressed="false"><span>Music</span><small>Our favorite melody</small></button>
               </div>
             </div>
           </div>

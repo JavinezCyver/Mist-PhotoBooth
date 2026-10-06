@@ -1,4 +1,4 @@
-/* MIST Photobooth ? local fonts and assets, no network dependencies. */
+/* CHERYL Photobooth ? local fonts and assets, no network dependencies. */
 :root {
   color-scheme: light;
   --mist: #EFD0DA;
@@ -86,6 +86,7 @@ select, input[type=color] { border: 1px solid var(--line); border-radius: 12px; 
 select { padding: 11px 30px 11px 12px; min-height: 44px; max-width: 100%; }
 input { accent-color: var(--rose); }
 button { cursor: pointer; border: 1px solid transparent; border-radius: 14px; padding: 13px 16px; min-height: 46px; font: 600 14px "Segoe UI", sans-serif; transition: background .2s, color .2s, border-color .2s, box-shadow .2s, transform .2s; }
+button { -webkit-tap-highlight-color: transparent; -webkit-user-select: none; user-select: none; }
 .primary { background: var(--rose); color: var(--white); box-shadow: 0 4px 12px #a4547215; }
 .primary:hover:not(:disabled) { background: #904160; box-shadow: 0 6px 16px #a4547225; transform: translateY(-1px); }
 .secondary { background: var(--white); border-color: var(--line); color: var(--plum); }
@@ -123,7 +124,7 @@ button:focus-visible, select:focus-visible, input:focus-visible, summary:focus-v
 .template-choices { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px; }
 .template-choice { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 7px; padding: 10px 3px; border: 1px solid var(--line); border-radius: 10px; color: var(--plum); background: var(--white); min-width: 0; }
 .template-choice canvas { width: auto; height: 70px; max-width: 100%; object-fit: contain; }
-.template-choice span { font-size: 10px; font-weight: 600; white-space: nowrap; }
+.template-choice span { font-size: 10px; font-weight: 600; text-align: center; line-height: 1.35; }
 .template-choice small { font-size: 9px; color: var(--muted); }
 .template-choice[aria-pressed=true] { border: 2px solid var(--rose); padding: 9px 2px; background: var(--mist); }
 .color-swatches { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 12px; }
@@ -268,13 +269,16 @@ footer { display: flex; justify-content: space-between; gap: 12px; font-size: 12
     box-shadow: none;
   }
   #print-area[data-template=grid] #print-image { width: min(6in, 100vh); }
+  #print-area[data-template=double] #print-image { width: min(6in, 60vh); }
+  #print-area[data-template=landscape] #print-image { width: min(9in, 270vh); }
+  #print-area[data-template=collage] #print-image { width: min(6in, 75vh); }
   #print-area[data-template=polaroid] #print-image { width: min(4in, 80vh); }
   #print-notice { display: none; }
   #print-area:not([data-ready=true]) #print-image { display: none; }
   #print-area:not([data-ready=true]) #print-notice { display: block; font: 14pt Arial, sans-serif; }
 }
 
-/* Separate steps reuse the existing MIST panels and controls. */
+/* Separate steps reuse the existing CHERYL panels and controls. */
 main.booth-flow { grid-template-columns: minmax(0, 1fr); max-width: 760px; margin-inline: auto; }
 .booth-flow #design-step .strip-editor { grid-template-columns: minmax(0, 1fr) 180px; gap: 24px; }
 .booth-flow #design-step .strip-preview { padding-top: 70px; }
@@ -295,6 +299,7 @@ main.booth-flow { grid-template-columns: minmax(0, 1fr); max-width: 760px; margi
 .theme-choice span { font-size: 16px; }
 .theme-choice small { font-size: 13px; color: var(--muted); }
 .theme-choice[aria-pressed=true] { border-color: var(--rose); background: #efd0da40; }
+.theme-choice:active:not(:disabled) { border-color: var(--rose); background: var(--mist); }
 
 /* Style the captured photos alongside the same controls used before capture. */
 main.booth-flow[data-step=preview] { max-width: 1000px; }
