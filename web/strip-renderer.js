@@ -131,6 +131,51 @@
         }
       }
     }
+    if (["umi", "mori", "love", "hoshi", "ribbon", "retro"].includes(theme)) {
+      context.strokeStyle = ink; context.fillStyle = ink; context.lineWidth = 3;
+      for (const x of [35, width - 35]) for (let y = 165; y < height - 240; y += 180) {
+        context.save(); context.translate(x, y);
+        if (theme === "umi") {
+          for (const offset of [-12, 0, 12]) {
+            context.beginPath(); context.moveTo(-24, offset);
+            context.bezierCurveTo(-12, offset - 14, 0, offset + 14, 12, offset);
+            context.bezierCurveTo(18, offset - 7, 22, offset - 7, 26, offset); context.stroke();
+          }
+        } else if (theme === "mori") {
+          context.beginPath(); context.moveTo(0, 34); context.lineTo(0, -34); context.stroke();
+          for (const offset of [-20, 0, 20]) {
+            context.beginPath(); context.ellipse(-10, offset, 7, 14, -.65, 0, Math.PI * 2); context.fill();
+            context.beginPath(); context.ellipse(10, offset - 10, 7, 14, .65, 0, Math.PI * 2); context.fill();
+          }
+        } else if (theme === "love") {
+          context.beginPath(); context.moveTo(0, 20);
+          context.bezierCurveTo(-42, -6, -18, -32, 0, -14);
+          context.bezierCurveTo(18, -32, 42, -6, 0, 20); context.closePath(); context.fill();
+        } else if (theme === "hoshi") {
+          context.beginPath();
+          for (let point = 0; point < 10; point++) {
+            const angle = -Math.PI / 2 + point * Math.PI / 5;
+            const radius = point % 2 ? 10 : 24;
+            const px = Math.cos(angle) * radius, py = Math.sin(angle) * radius;
+            if (point === 0) context.moveTo(px, py); else context.lineTo(px, py);
+          }
+          context.closePath(); context.stroke();
+          context.beginPath(); context.arc(0, 65, 3, 0, Math.PI * 2); context.fill();
+        } else if (theme === "ribbon") {
+          context.beginPath(); context.moveTo(0, 0);
+          context.bezierCurveTo(-36, -36, -36, 24, 0, 0);
+          context.bezierCurveTo(36, -36, 36, 24, 0, 0); context.stroke();
+          context.beginPath(); context.moveTo(0, 0); context.lineTo(-14, 32);
+          context.moveTo(0, 0); context.lineTo(14, 32); context.stroke();
+          context.beginPath(); context.arc(0, 0, 4, 0, Math.PI * 2); context.fill();
+        } else {
+          for (let row = 0; row < 4; row++) for (let column = 0; column < 2; column++) {
+            if ((row + column) % 2 === 0) context.fillRect(-16 + column * 16, -32 + row * 16, 16, 16);
+          }
+        }
+        context.restore();
+      }
+    }
     context.restore();
   }
   async function render(photos, style, sheet = false, { maxDimension } = {}) {
@@ -172,7 +217,13 @@
       osaka: { title: "Osaka 大阪", caption: "City lights" },
       hokkaido: { title: "Hokkaido 北海道", caption: "Snowy memories" },
       hanabi: { title: "Hanabi 花火", caption: "Summer fireworks" },
-      tsuki: { title: "Tsuki 月", caption: "Moonlit moments" }
+      tsuki: { title: "Tsuki 月", caption: "Moonlit moments" },
+      umi: { title: "Umi 海", caption: "Ocean breeze" },
+      mori: { title: "Mori 森", caption: "Forest whispers" },
+      love: { title: "Love", caption: "Sweet little hearts" },
+      hoshi: { title: "Hoshi 星", caption: "Written in the stars" },
+      ribbon: { title: "Ribbon", caption: "Tied with a bow" },
+      retro: { title: "Retro", caption: "Good old days" }
     };
     const theme = themes[style.theme] || themes.none;
     context.font = `600 ${sheet ? 28 : 34}px Georgia, "Yu Mincho", serif`;

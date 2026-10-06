@@ -1,6 +1,6 @@
 "use strict";
 (() => {
-  const names = { original: "Original", bw: "Black & White", mono: "Mono", vintage: "Vintage", sepia: "Sepia", rosy: "Rosy", soft: "Soft" };
+  const names = { original: "Original", bw: "Black & White", mono: "Mono", vintage: "Vintage", sepia: "Sepia", rosy: "Rosy", soft: "Soft", warm: "Warm glow", cool: "Cool breeze", peach: "Peach", lavender: "Lavender", faded: "Faded film", vivid: "Vivid" };
   // Every view and output uses these pixel transforms. Sources remain untouched
   // so changing a filter never compounds it with an earlier selection.
   function apply(context, width, height, filter) {
@@ -29,6 +29,32 @@
         data[i] = (r - 128) * .82 + 148;
         data[i + 1] = (g - 128) * .82 + 146;
         data[i + 2] = (b - 128) * .82 + 147;
+      } else if (filter === "warm") {
+        data[i] = r * 1.04 + 10;
+        data[i + 1] = g * 1.01 + 5;
+        data[i + 2] = b * .92;
+      } else if (filter === "cool") {
+        data[i] = r * .93;
+        data[i + 1] = g * 1.01 + 4;
+        data[i + 2] = b * 1.05 + 10;
+      } else if (filter === "peach") {
+        data[i] = (r - 128) * .9 + 150;
+        data[i + 1] = (g - 128) * .9 + 137;
+        data[i + 2] = (b - 128) * .86 + 131;
+      } else if (filter === "lavender") {
+        data[i] = (r - 128) * .9 + 140;
+        data[i + 1] = (g - 128) * .88 + 130;
+        data[i + 2] = (b - 128) * .94 + 151;
+      } else if (filter === "faded") {
+        const gray = .2126 * r + .7152 * g + .0722 * b;
+        data[i] = (r * .8 + gray * .2) * .78 + 34;
+        data[i + 1] = (g * .8 + gray * .2) * .78 + 31;
+        data[i + 2] = (b * .8 + gray * .2) * .78 + 28;
+      } else if (filter === "vivid") {
+        const gray = .2126 * r + .7152 * g + .0722 * b;
+        data[i] = (gray + (r - gray) * 1.25 - 128) * 1.08 + 128;
+        data[i + 1] = (gray + (g - gray) * 1.25 - 128) * 1.08 + 128;
+        data[i + 2] = (gray + (b - gray) * 1.25 - 128) * 1.08 + 128;
       }
     }
     context.putImageData(pixels, 0, 0);

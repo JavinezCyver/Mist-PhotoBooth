@@ -148,7 +148,7 @@ with zipfile.ZipFile(sys.argv[1]) as archive:
       const labels = [];
       CanvasRenderingContext2D.prototype.fillText = function(text, ...args) { labels.push(text); return original.call(this, text, ...args); };
       try {
-        for (const [theme, title, caption] of [["none", "Minimal ミニマル", "Simply you"], ["sakura", "Sakura 桜", "Cherry blossom"], ["tokyo", "Tokyo 東京", "City postcards"], ["kyoto", "Kyoto 京都", "Quiet moments"], ["osaka", "Osaka 大阪", "City lights"], ["hokkaido", "Hokkaido 北海道", "Snowy memories"], ["hanabi", "Hanabi 花火", "Summer fireworks"], ["tsuki", "Tsuki 月", "Moonlit moments"]]) {
+        for (const [theme, title, caption] of [["none", "Minimal ミニマル", "Simply you"], ["sakura", "Sakura 桜", "Cherry blossom"], ["tokyo", "Tokyo 東京", "City postcards"], ["kyoto", "Kyoto 京都", "Quiet moments"], ["osaka", "Osaka 大阪", "City lights"], ["hokkaido", "Hokkaido 北海道", "Snowy memories"], ["hanabi", "Hanabi 花火", "Summer fireworks"], ["tsuki", "Tsuki 月", "Moonlit moments"], ["umi", "Umi 海", "Ocean breeze"], ["mori", "Mori 森", "Forest whispers"], ["love", "Love", "Sweet little hearts"], ["hoshi", "Hoshi 星", "Written in the stars"], ["ribbon", "Ribbon", "Tied with a bow"], ["retro", "Retro", "Good old days"]]) {
           document.querySelector('[data-theme="' + theme + '"]').click();
           if (document.getElementById('strip-theme').value !== theme) return false;
           for (const template of ['classic','grid','polaroid']) {
@@ -182,6 +182,7 @@ with zipfile.ZipFile(sys.argv[1]) as archive:
     await action(`document.querySelector('[data-color="#ddd0ef"]').click(); document.querySelector('[data-template=grid]').click(); document.getElementById('strip-theme').value = 'sakura'; document.getElementById('strip-theme').dispatchEvent(new Event('input')); document.getElementById('continue-camera').click()`);
     assert.deepEqual(await visibleStep(), ['camera-step']);
     assert.equal(await evaluate('document.getElementById("review-photos").disabled'), true);
+    assert.equal(await evaluate('document.querySelector(".session-panel").hidden && document.getElementById("slots").getClientRects().length === 0'), true, 'Photo thumbnails and their edit actions must stay hidden during camera capture');
     await action(`window.__flowImage = async () => {
       const canvas = document.createElement('canvas'); canvas.width = 160; canvas.height = 100;
       canvas.getContext('2d').fillRect(0, 0, 160, 100);
@@ -192,9 +193,23 @@ with zipfile.ZipFile(sys.argv[1]) as archive:
     await action('await uploadImages(await Promise.all(Array.from({length:3}, window.__flowImage)))');
     assert.deepEqual(await visibleStep(), ['preview-step']);
     assert.equal(await evaluate('document.getElementById("review-preview-host").contains(document.getElementById("strip-preview")) && document.getElementById("review-session-host").contains(document.getElementById("slots"))'), true);
+    assert.equal(await evaluate('!document.querySelector(".session-panel").hidden && document.getElementById("slots").getClientRects().length > 0'), true, 'Photo thumbnails and edit actions must appear alongside the editable preview');
+    assert.equal(await evaluate('Array.from(document.querySelectorAll(".slot-actions")).every(actions => actions.children.length === 1 && actions.firstElementChild.classList.contains("retake-photo")) && !document.querySelector(".replace-photo, .clear-photo")'), true, 'Each photo must offer only Retake, with no Replace or delete button');
+    assert.equal(await evaluate(`document.getElementById('review-design-host').contains(document.getElementById('design-controls')) && document.querySelector('[data-theme=tokyo]').getClientRects().length > 0 && document.querySelector('[data-color="#cde6f5"]').getClientRects().length > 0`), true, 'Frame designs and colors must be available on the photo preview screen');
+    await action(`window.__previewPhotos = photos.map(photo => photo.url);
+      document.querySelector('[data-color="#cde6f5"]').click();
+      document.querySelector('[data-theme=tokyo]').click();
+      await sleep(100); await renderStripPreview();`);
+    assert.equal(await evaluate(`(async () => {
+      const expected = await PhotoBoothStrip.render(photos.map(photo => photo.blob), stripStyle());
+      return document.getElementById('strip-preview').toDataURL() === expected.toDataURL()
+        && photos.every((photo,index) => photo.url === window.__previewPhotos[index])
+        && document.querySelector('[data-theme=tokyo]').getAttribute('aria-pressed') === 'true'
+        && document.querySelector('[data-color="#cde6f5"]').getAttribute('aria-pressed') === 'true';
+    })()`), true, 'Changing the preview design must render the chosen frame and preserve every photo');
     await action('document.getElementById("continue-keep").click()');
     assert.deepEqual(await visibleStep(), ['keep-step']);
-    assert.equal(await evaluate('!document.getElementById("save-strip").disabled && !document.getElementById("print").disabled && document.getElementById("frame-color").value === "#ddd0ef"'), true);
+    assert.equal(await evaluate('!document.getElementById("save-strip").disabled && !document.getElementById("print").disabled && document.getElementById("frame-color").value === "#cde6f5" && document.getElementById("strip-theme").value === "tokyo"'), true);
     await action('document.getElementById("save-strip").click(); while (busy) await sleep(20)', true);
     for (let i=0; i<100 && !(await readdir(downloads)).some(name => name.endsWith('.png')); i++) await sleep(100);
     assert.ok((await readdir(downloads)).some(name => name.endsWith('.png')), 'Finished PNG downloads from the final screen');
@@ -211,10 +226,16 @@ with zipfile.ZipFile(sys.argv[1]) as archive:
     for(let i=0; i<4; i++) await action('await capturePhoto()');
     assert.deepEqual(await visibleStep(), ['preview-step']);
     assert.equal(await evaluate('photos.every(photo => photo.source === "camera")'), true);
-    await action(`window.__beforeRetake = photos.map(photo => photo.url); document.querySelector('.retake-photo[data-index="1"]').click(); while(countdown) await sleep(20)`);
+    await action(`window.__beforeRetake = photos.map(photo => photo.url); document.querySelector('.retake-photo[data-index="1"]').click(); await sleep(300)`);
+    assert.deepEqual(await visibleStep(), ['camera-step']);
+    assert.equal(await evaluate('!countdown && !document.getElementById("capture").disabled && document.getElementById("capture").textContent.includes("Capture photo 2") && photos.every((photo,index) => photo.url === window.__beforeRetake[index])'), true, 'Retake with the timer off must wait for an explicit Capture click and preserve the old photo');
+    assert.equal(await evaluate('document.querySelector(".session-panel").hidden'), true, 'Returning to the camera for a retake must hide photo review controls');
+    await action('document.getElementById("review-photos").click()');
+    assert.equal(await evaluate('pendingCaptureSlot === null && photos.every((photo,index) => photo.url === window.__beforeRetake[index])'), true, 'Returning to preview cancels a pending retake without replacing any photos');
+    await action(`document.querySelector('.retake-photo[data-index="1"]').click(); document.getElementById('capture').click(); while(countdown) await sleep(20)`);
     assert.deepEqual(await visibleStep(), ['preview-step']);
     assert.equal(await evaluate('photos[1].url !== window.__beforeRetake[1] && photos.every((photo,index) => index === 1 || photo.url === window.__beforeRetake[index])'), true);
-    await action(`document.querySelector('.clear-photo[data-index="2"]').click()`);
+    await action(`document.querySelector('.retake-photo[data-index="2"]').click()`);
     assert.deepEqual(await visibleStep(), ['camera-step']);
     await action('await capturePhoto()');
     assert.deepEqual(await visibleStep(), ['preview-step']);
@@ -227,7 +248,7 @@ with zipfile.ZipFile(sys.argv[1]) as archive:
     }
     await action('document.getElementById("reset").click(); stopCamera()');
     assert.deepEqual(await visibleStep(), ['design-step']);
-    assert.equal(await evaluate('document.getElementById("frame-color").value === "#ddd0ef" && document.getElementById("strip-theme").value === "sakura"'), true);
+    assert.equal(await evaluate('document.getElementById("frame-color").value === "#cde6f5" && document.getElementById("strip-theme").value === "tokyo" && document.getElementById("design-options-host").contains(document.getElementById("design-controls"))'), true);
     await action('document.querySelector("[data-template=polaroid]").click(); document.getElementById("continue-camera").click(); await uploadImages([await window.__flowImage()])');
     assert.deepEqual(await visibleStep(), ['preview-step']);
     assert.equal(await evaluate('photos.filter(Boolean).length'), 1);
@@ -239,7 +260,7 @@ with zipfile.ZipFile(sys.argv[1]) as archive:
     assert.equal(await evaluate(`(() => {
       const select = document.getElementById('strip-filter'), trigger = document.getElementById('strip-filter-trigger'), menu = document.getElementById('strip-filter-options');
       trigger.click();
-      if (menu.hidden || trigger.getAttribute('aria-expanded') !== 'true' || menu.children.length !== 7 || !select.hidden) return false;
+      if (menu.hidden || trigger.getAttribute('aria-expanded') !== 'true' || menu.children.length !== Object.keys(PhotoBoothFilters.names).length || !select.hidden) return false;
       if (getComputedStyle(menu).backgroundColor !== 'rgb(255, 250, 251)') return false;
       menu.children[5].click();
       return menu.hidden && select.value === 'rosy' && trigger.textContent === 'Rosy' && document.getElementById('selected-filter').textContent === 'Selected filter: Rosy' && menu.children[5].getAttribute('aria-selected') === 'true';
@@ -410,18 +431,18 @@ with zipfile.ZipFile(sys.argv[1]) as archive:
   await evaluate('window.__uploadFiles(4).then(uploadImages)');
   assert.equal(await evaluate('complete() && photos[0].url === window.__firstUploadUrl && !document.getElementById("save").disabled && !document.getElementById("print").disabled && document.getElementById("status").textContent.includes("extra image")'), true);
   assert.deepEqual(await evaluate(`Array.from(document.querySelectorAll('.template-choice'), button => button.dataset.template)`), ['classic','grid','polaroid']);
-  assert.deepEqual(await evaluate(`Array.from(document.getElementById('strip-theme').options, option => option.textContent)`), ['Minimal ミニマル', 'Sakura 桜', 'Tokyo 東京', 'Kyoto 京都', 'Osaka 大阪', 'Hokkaido 北海道', 'Hanabi 花火', 'Tsuki 月']);
+  assert.deepEqual(await evaluate(`Array.from(document.getElementById('strip-theme').options, option => option.textContent)`), ['Minimal ミニマル', 'Sakura 桜', 'Tokyo 東京', 'Kyoto 京都', 'Osaka 大阪', 'Hokkaido 北海道', 'Hanabi 花火', 'Tsuki 月', 'Umi 海', 'Mori 森', 'Love', 'Hoshi 星', 'Ribbon', 'Retro']);
   assert.equal(await evaluate(`(async () => {
     const urls = photos.map(photo => photo.url);
     for (const template of ['polaroid','grid','classic']) {
       document.querySelector('[data-template="' + template + '"]').click();
-      await renderStripPreview();
+      await sleep(100); await renderStripPreview();
       if (photos.some((photo,index) => photo.url !== urls[index])) return false;
       if (document.querySelector('[data-template="' + template + '"]').getAttribute('aria-pressed') !== 'true') return false;
       if (!complete()) return false;
     }
     for (const swatch of document.querySelectorAll('.color-swatch')) {
-      swatch.click(); await renderStripPreview();
+      swatch.click(); await sleep(100); await renderStripPreview();
       if (document.getElementById('frame-color').value !== swatch.dataset.color || swatch.getAttribute('aria-pressed') !== 'true') return false;
       const rgb = swatch.dataset.color.match(/[a-f0-9]{2}/gi).map(value => parseInt(value,16));
       const pixel = document.getElementById('strip-preview').getContext('2d').getImageData(1,1,1,1).data;
@@ -449,7 +470,7 @@ with zipfile.ZipFile(sys.argv[1]) as archive:
         if (centerColors[slot.index].some((value,index) => pixel[index] !== value)) return false;
       }
       const designs = new Set([base.toDataURL()]);
-      for (const theme of ['sakura','tokyo','kyoto']) {
+      for (const theme of ['sakura','tokyo','kyoto','osaka','hokkaido','hanabi','tsuki','umi','mori','love','hoshi','ribbon','retro']) {
         const output = await PhotoBoothStrip.render(sources,{...style,theme});
         const context = output.getContext('2d');
         if (PhotoBoothFiles.crc32(context.getImageData(0,100,60,geometry.height - 350).data) === plainMargin) return false;
@@ -460,12 +481,12 @@ with zipfile.ZipFile(sys.argv[1]) as archive:
         const decoded = PhotoBoothFilters.draw(image,image.width,image.height,'original'); image.close();
         if (decoded.toDataURL() !== output.toDataURL()) return false;
       }
-      if (designs.size !== 4) return false;
+      if (designs.size !== 14) return false;
     }
     return true;
   })()`), true, 'Themes must visibly alter every template, survive PNG encoding, and leave all photo pixels untouched');
   console.log('Template layouts, photo preservation, frame presets/custom color, and face-safe exported theme decorations passed.');
-  assert.deepEqual(await evaluate(`Array.from(document.getElementById('strip-filter').options, option => option.textContent)`), ['Original', 'Black & White', 'Mono', 'Vintage', 'Sepia', 'Rosy', 'Soft']);
+  assert.deepEqual(await evaluate(`Array.from(document.getElementById('strip-filter').options, option => option.textContent)`), ['Original', 'Black & White', 'Mono', 'Vintage', 'Sepia', 'Rosy', 'Soft', 'Warm glow', 'Cool breeze', 'Peach', 'Lavender', 'Faded film', 'Vivid']);
   const filterTones = await evaluate(`(() => {
     const fixture = document.createElement('canvas'); fixture.width = 3; fixture.height = 1;
     const ctx = fixture.getContext('2d');
@@ -478,25 +499,28 @@ with zipfile.ZipFile(sys.argv[1]) as archive:
   assert.deepEqual(filterTones.bw.slice(0,8), [64,64,64,255,192,192,192,255]);
   assert.deepEqual(filterTones.mono.slice(0,8), [32,32,32,255,224,224,224,255]);
   for (const filter of ['bw','mono']) assert.equal(filterTones[filter][8] === filterTones[filter][9] && filterTones[filter][9] === filterTones[filter][10], true);
-  for (const filter of ['vintage','sepia','rosy','soft']) assert.notDeepEqual(filterTones[filter], filterTones.original);
+  for (const filter of ['vintage','sepia','rosy','soft','warm','cool','peach','lavender','faded','vivid']) assert.notDeepEqual(filterTones[filter], filterTones.original);
   assert.equal(await evaluate(`(async () => {
     for (const [filter, name] of Object.entries(PhotoBoothFilters.names)) {
       document.getElementById('strip-filter').value = filter;
       document.getElementById('strip-filter').dispatchEvent(new Event('input'));
-      await renderPhotoPreviews(); await renderStripPreview();
+      await sleep(100); await renderPhotoPreviews(); await renderStripPreview();
       if (document.getElementById('selected-filter').textContent !== 'Selected filter: ' + name) return false;
       const expected = await createImageBitmap(photos[0].blob);
       const canvas = PhotoBoothFilters.draw(expected, expected.width, expected.height, filter); expected.close();
       const tone = canvas.getContext('2d').getImageData(80,50,1,1).data.join(',');
-      if (document.querySelector('[data-photo-index="0"]').getContext('2d').getImageData(80,50,1,1).data.join(',') !== tone) return false;
-      if (document.getElementById('strip-preview').getContext('2d').getImageData(400,350,1,1).data.join(',') !== tone) return false;
+      const thumbnailTone = document.querySelector('[data-photo-index="0"]').getContext('2d').getImageData(80,50,1,1).data.join(',');
+      const stripTone = document.getElementById('strip-preview').getContext('2d').getImageData(400,350,1,1).data.join(',');
+      if (thumbnailTone !== tone) throw new Error(filter + ' thumbnail: ' + thumbnailTone + ', expected ' + tone);
+      if (stripTone !== tone) throw new Error(filter + ' strip: ' + stripTone + ', expected ' + tone);
       const files = await localFiles();
       const saved = await createImageBitmap(files[0].blob);
       const copy = PhotoBoothFilters.draw(saved, saved.width, saved.height, 'original'); saved.close();
-      if (copy.getContext('2d').getImageData(80,50,1,1).data.join(',') !== tone) return false;
+      const savedTone = copy.getContext('2d').getImageData(80,50,1,1).data.join(',');
+      if (savedTone !== tone) throw new Error(filter + ' export: ' + savedTone + ', expected ' + tone);
     }
     return true;
-  })()`), true, 'All seven filters must agree across uploaded thumbnails, strip pixels and individual exports');
+  })()`), true, 'All filters must agree across uploaded thumbnails, strip pixels and individual exports');
   await evaluate(`(async () => {
     document.getElementById('strip-filter').value = 'mono';
     document.getElementById('strip-template').value = 'polaroid';
@@ -631,7 +655,7 @@ with Image.open(sys.argv[1]) as image:
   assert.equal(await evaluate('window.__saveRequests'), 0);
   await evaluate('window.showDirectoryPicker = undefined; document.querySelector(\"[data-template=classic]\").click(); updateControls()');
   assert.equal(await evaluate('document.getElementById("save-folder").hidden'), true);
-  await evaluate('document.querySelectorAll(".slot .clear-photo")[1].click()');
+  await evaluate('URL.revokeObjectURL(photos[1].url); photos[1] = null; invalidatePrint(); renderSlots()');
   assert.equal(await evaluate('document.getElementById("save").disabled && document.getElementById("print").disabled'), true);
   assert.equal(await evaluate('document.getElementById("save-strip").disabled'), true);
   await evaluate('document.getElementById("reset").click()');
@@ -694,6 +718,8 @@ with Image.open(sys.argv[1]) as image:
     const before = photos.map(photo => photo.url);
     document.getElementById('capture-delay').value = '0'; document.getElementById('capture-delay').dispatchEvent(new Event('change'));
     document.querySelector('.retake-photo[data-index="1"]').click();
+    if (countdown || photos.some((photo,index) => photo.url !== before[index]) || document.getElementById('capture').disabled) return false;
+    document.getElementById('capture').click();
     await capturePhoto(2);
     while (countdown) await sleep(10);
     if (photos[1].url === before[1] || photos[2].url !== before[2] || photos[0].url !== before[0] || photos[3].url !== before[3]) return false;
@@ -706,16 +732,16 @@ with Image.open(sys.argv[1]) as image:
     input.click = () => {};
     try {
       const before = photos.map(photo => photo.url);
-      document.querySelector('.replace-photo[data-index="2"]').click();
+      replacementSlot = 2; input.multiple = false;
       if (input.multiple || replacementSlot !== 2) return false;
       input.dispatchEvent(new Event('cancel'));
       if (replacementSlot !== null || !input.multiple || photos[2].url !== before[2]) return false;
-      document.querySelector('.replace-photo[data-index="2"]').click();
+      replacementSlot = 2; input.multiple = false;
       let transfer = new DataTransfer(); (await window.__uploadFiles(1)).forEach(file => transfer.items.add(file)); input.files = transfer.files;
       input.dispatchEvent(new Event('change')); while (busy) await sleep(10);
       if (photos[2].url === before[2] || photos[2].source !== 'upload' || photos.some((photo,index) => index !== 2 && photo.url !== before[index])) return false;
       const replaced = photos[2].url;
-      document.querySelector('.replace-photo[data-index="2"]').click();
+      replacementSlot = 2; input.multiple = false;
       transfer = new DataTransfer(); transfer.items.add(new File(['broken'],'broken.png',{type:'image/png'})); input.files = transfer.files;
       input.dispatchEvent(new Event('change')); while (busy) await sleep(10);
       return photos[2].url === replaced && complete() && input.multiple && replacementSlot === null;
@@ -785,7 +811,7 @@ assert re.search(rb'/Height\\s+' + sys.argv[3].encode() + rb'\\b', data)
   await evaluate('window.print = () => { throw new Error("Printing unavailable"); }; printPhotos()');
   assert.equal(await evaluate('!busy && !printPending && complete() && document.getElementById("status").textContent.includes("Save photo strip")'), true);
   console.log('Styled strips print on one PDF page; cancellation and unavailable-print recovery passed.');
-  await evaluate('document.querySelector("[data-template=classic]").click(); document.querySelectorAll(".slot .clear-photo")[2].click()');
+  await evaluate('document.querySelector("[data-template=classic]").click(); URL.revokeObjectURL(photos[2].url); photos[2] = null; invalidatePrint(); renderSlots()');
   assert.equal(await evaluate('!complete() && document.getElementById("save").disabled && document.getElementById("print").disabled'), true);
   await evaluate('window.__printCalled = false; window.print = () => { window.__printCalled = true; }; printPhotos(); window.dispatchEvent(new Event("beforeprint"))');
   assert.equal(await evaluate('!window.__printCalled && document.getElementById("print-area").dataset.ready === "false"'), true);
@@ -807,7 +833,7 @@ assert re.search(rb'/Height\\s+' + sys.argv[3].encode() + rb'\\b', data)
     document.querySelector('[data-template=polaroid]').click();
     document.getElementById('polaroid-photo').value = '2'; document.getElementById('polaroid-photo').dispatchEvent(new Event('input'));
     if (!complete() || requiredIndices()[0] !== 2 || photos.filter(Boolean).length !== 4) return false;
-    document.querySelectorAll('.slot .clear-photo')[2].click();
+    URL.revokeObjectURL(photos[2].url); photos[2] = null; invalidatePrint(); renderSlots();
     if (complete() || !document.getElementById('save-strip').disabled || photos.filter(Boolean).length !== 3) return false;
     document.querySelector('[data-template=classic]').click(); document.getElementById('reset').click();
     return photos.every(photo => photo === null);

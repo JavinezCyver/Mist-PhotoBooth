@@ -19,6 +19,7 @@ let previewGeneration = 0;
 let shareStripFile = null;
 let shareCapability = null;
 let replacementSlot = null;
+let pendingCaptureSlot = null;
 let flowStep = "design";
 const facingByDevice = new Map();
 const unavailableFacing = new Set();
@@ -118,11 +119,14 @@ function showStep(step) {
   if (busy || connecting || countdown) return;
   if (["preview", "keep"].includes(step) && !complete()) return;
   flowStep = step;
+  if (step !== "camera") pendingCaptureSlot = null;
   document.querySelector("main").dataset.step = step;
   for (const name of ["design", "camera", "preview", "keep"]) $(name + "-step").hidden = name !== step;
   const previewHost = step === "keep" ? "keep-preview-host" : step === "preview" ? "review-preview-host" : "design-preview-host";
   $(previewHost).append($("shared-strip-preview"));
+  $(step === "preview" ? "review-design-host" : "design-options-host").append($("shared-design-options"));
   $(step === "preview" ? "review-session-host" : "camera-session-host").append(document.querySelector(".session-panel"));
+  document.querySelector(".session-panel").hidden = step !== "preview";
   const heading = $(step + "-step").querySelector("h2");
   heading.tabIndex = -1;
   heading.focus({ preventScroll: true });
@@ -146,7 +150,7 @@ function updateControls() {
   $("save-folder").hidden = typeof window.showDirectoryPicker !== "function" || !window.isSecureContext;
   $("save-folder").disabled = !complete() || !unlocked;
   $("print").disabled = !complete() || !unlocked;
-  $("capture").disabled = !cameraReady() || complete() || !unlocked;
+  $("capture").disabled = !cameraReady() || (complete() && pendingCaptureSlot === null) || !unlocked;
   $("upload").disabled = complete() || !unlocked;
   $("image-files").disabled = complete() || !unlocked;
   $("connect").disabled = !unlocked;
@@ -161,18 +165,17 @@ function updateControls() {
   $("switch-camera").hidden = !stream || !canFlip || unavailableFacing.has(nextFacing);
   $("switch-camera").disabled = !unlocked || !cameraReady();
   $("switch-camera").textContent = `Switch to ${nextFacing === "user" ? "front" : "back"} camera`;
-  const indices = requiredIndices(), single = indices.length === 1, next = nextSlot();
+  const indices = requiredIndices(), single = indices.length === 1, next = pendingCaptureSlot ?? nextSlot();
   const delay = Number($("capture-delay").value);
-  $("capture").textContent = complete() ? (single ? "Your Polaroid photo is ready" : "All four photos captured") : `Capture photo ${next + 1}${delay ? ` · ${delay} second countdown` : " · no countdown"}`;
+  $("capture").textContent = complete() && pendingCaptureSlot === null ? (single ? "Your Polaroid photo is ready" : "All four photos captured") : `Capture photo ${next + 1}${delay ? ` · ${delay} second countdown` : " · no countdown"}`;
   $("progress").textContent = `${indices.filter(index => photos[index]).length} of ${indices.length} ${single ? "photo" : "photos"} ready`;
   $("session-heading").textContent = single ? "Your Polaroid photo" : "Four little moments";
-  $("session-help").textContent = single ? "The selected photo is used in your Polaroid. Other session photos are preserved; choose a different photo in the customization controls." : "Capture or upload all four photos to save or print. Clear a slot to replace its photo.";
+  $("session-help").textContent = single ? "The selected photo is used in your Polaroid. Other session photos are preserved; choose a different photo in the customization controls." : "Choose Retake below a photo to take it again when you are ready.";
   $("template-help").textContent = single ? "One selected photo completes your Polaroid. Switch back to a four-photo template to use your other photos." : "Fill all four slots to export. Your photos stay here when you switch templates.";
   $("polaroid-photo-label").hidden = !single;
   document.querySelectorAll(".slot").forEach((slot, index) => { slot.dataset.active = String(indices.includes(index)); });
   document.querySelectorAll(".slot button").forEach(button => {
-    const photo = photos[Number(button.dataset.index)];
-    button.disabled = !unlocked || (button.classList.contains("retake-photo") ? !cameraReady() : button.classList.contains("clear-photo") ? !photo : false);
+    button.disabled = !unlocked;
   });
 }
 
@@ -190,37 +193,19 @@ function renderSlots() {
       image.setAttribute("aria-label", `${photo.source === "upload" ? "Uploaded" : "Captured"} photo ${index + 1}`);
       preview.append(image);
     } else preview.textContent = `${String(index + 1).padStart(2, "0")}  ·  Waiting for photo`;
-    const clear = document.createElement("button");
-    clear.textContent = "×";
-    clear.className = "clear-photo";
-    clear.dataset.index = index;
-    clear.title = `Clear photo ${index + 1}`;
-    clear.setAttribute("aria-label", `Clear photo ${index + 1}`);
-    clear.addEventListener("click", () => {
-      if (busy || countdown || connecting) return;
-      URL.revokeObjectURL(photos[index].url);
-      photos[index] = null;
-      invalidatePrint();
-      renderSlots();
-      if (!complete() && flowStep === "preview") showStep("camera");
-      status(`Photo ${index + 1} cleared. Capture or upload a replacement to enable saving and printing.`);
-    });
     const retake = document.createElement("button");
     retake.type = "button"; retake.className = "retake-photo"; retake.dataset.index = index;
     retake.textContent = photo ? "Retake" : "Capture";
     retake.setAttribute("aria-label", `${photo ? "Retake" : "Capture"} photo ${index + 1}`);
     retake.title = "Open the camera to capture or retake this photo";
-    retake.addEventListener("click", () => { showStep("camera"); capturePhoto(index); });
-    const replace = document.createElement("button");
-    replace.type = "button"; replace.className = "replace-photo"; replace.dataset.index = index;
-    replace.textContent = photo ? "Replace" : "Upload";
-    replace.setAttribute("aria-label", `${photo ? "Replace" : "Upload"} photo ${index + 1} with an image`);
-    replace.addEventListener("click", () => {
+    retake.addEventListener("click", () => {
       if (busy || countdown || connecting) return;
-      replacementSlot = index; $("image-files").multiple = false; $("image-files").click();
+      pendingCaptureSlot = index;
+      showStep("camera");
+      status(`Ready to ${photos[index] ? "retake" : "capture"} photo ${index + 1}. ${cameraReady() ? "Settle in, then choose Capture photo when you are ready." : "Open the camera, then choose Capture photo when you are ready."}`);
     });
     const actions = document.createElement("div"); actions.className = "slot-actions";
-    actions.append(retake, replace, clear);
+    actions.append(retake);
     row.append(preview, actions);
     $("slots").append(row);
   });
@@ -385,7 +370,7 @@ const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 const toBlob = (canvas) => new Promise((resolve, reject) => canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error("Could not encode the captured photo.")), "image/png"));
 
 async function capturePhoto(target = null) {
-  const slot = target === null ? nextSlot() : target;
+  const slot = target === null ? (pendingCaptureSlot ?? nextSlot()) : target;
   if (busy || countdown || connecting || !Number.isInteger(slot) || slot < 0 || slot >= REQUIRED || !cameraReady()) return;
   const delay = Number($("capture-delay").value);
   const retaking = Boolean(photos[slot]);
@@ -413,6 +398,7 @@ async function capturePhoto(target = null) {
     const previous = photos[slot];
     photos[slot] = { blob, url: URL.createObjectURL(blob), width: canvas.width, height: canvas.height, source: "camera" };
     if (previous) URL.revokeObjectURL(previous.url);
+    pendingCaptureSlot = null;
     const flash = $("shutter-flash");
     flash.classList.remove("active"); void flash.offsetWidth; flash.classList.add("active");
     setTimeout(() => flash.classList.remove("active"), 300);
@@ -424,7 +410,7 @@ async function capturePhoto(target = null) {
     $("countdown").hidden = true;
     $("capture-note").hidden = true;
     renderSlots();
-    if (complete() && flowStep === "camera") showStep("preview");
+    if (complete() && pendingCaptureSlot === null && flowStep === "camera") showStep("preview");
   }
 }
 
@@ -680,6 +666,7 @@ $("continue-keep").addEventListener("click", () => showStep("keep"));
 $("back-preview").addEventListener("click", () => showStep("preview"));
 $("retake-photos").addEventListener("click", () => {
   if (busy || countdown || connecting) return;
+  pendingCaptureSlot = null;
   for (const index of requiredIndices()) {
     if (photos[index]) URL.revokeObjectURL(photos[index].url);
     photos[index] = null;
@@ -735,7 +722,7 @@ function updateDesignSelections() {
     if (selected) name = swatch.getAttribute("aria-label");
   });
   $("color-name").textContent = `${name} · ${color.toUpperCase()}`;
-  const descriptions = {none:"A quiet frame with simple keepsake typography.", sakura:"Cherry blossoms, fine branches, and delicate pink accents around your photos.", tokyo:"Japanese postcard typography, graphic borders, and a postal stamp accent.", kyoto:"Traditional wave patterns and a small seal, softly woven into the margins.", osaka:"Little city skylines and bright window accents along your frame.", hokkaido:"Delicate snowflakes and falling snow for a winter keepsake.", hanabi:"Summer firework bursts celebrating your little moments.", tsuki:"A crescent moon and tiny stars for a moonlit memory."};
+  const descriptions = {none:"A quiet frame with simple keepsake typography.", sakura:"Cherry blossoms, fine branches, and delicate pink accents around your photos.", tokyo:"Japanese postcard typography, graphic borders, and a postal stamp accent.", kyoto:"Traditional wave patterns and a small seal, softly woven into the margins.", osaka:"Little city skylines and bright window accents along your frame.", hokkaido:"Delicate snowflakes and falling snow for a winter keepsake.", hanabi:"Summer firework bursts celebrating your little moments.", tsuki:"A crescent moon and tiny stars for a moonlit memory.", umi:"Flowing ocean waves for a breezy seaside keepsake.", mori:"Leafy sprigs woven down the frame for a peaceful forest memory.", love:"Little hearts framing the moments you love.", hoshi:"Outlined stars and tiny stardust for a celestial keepsake.", ribbon:"Delicate bows and trailing ribbons around your photos.", retro:"Checkerboard accents for a playful retro photo strip."};
   $("theme-description").textContent = descriptions[$("strip-theme").value];
 }
 let designPreviewTimer = null;
@@ -781,7 +768,7 @@ document.querySelectorAll("#design-controls input, #design-controls select").for
 $("reset").addEventListener("click", () => {
   if (busy || countdown || connecting) return;
   photos.forEach(photo => { if (photo) URL.revokeObjectURL(photo.url); });
-  replacementSlot = null; $("image-files").value = ""; $("image-files").multiple = true;
+  replacementSlot = null; pendingCaptureSlot = null; $("image-files").value = ""; $("image-files").multiple = true;
   photos = Array(REQUIRED).fill(null); sessionDate = new Date().toLocaleDateString(); invalidatePrint(); renderSlots(); showStep("design"); status("Choose your design, then continue to the camera for a new photo set.");
 });
 video.addEventListener("loadeddata", updateControls);

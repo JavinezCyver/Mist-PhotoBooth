@@ -6,11 +6,11 @@
   <meta name="theme-color" content="#EFD0DA">
   <title>MIST Photobooth</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=20261005-fill">
+  <link rel="stylesheet" href="styles.css?v=20261006-retake-only">
   <script src="local-save.js" defer></script>
-  <script src="filters.js" defer></script>
-  <script src="strip-renderer.js?v=20261005-fill" defer></script>
-  <script src="app.js" defer></script>
+  <script src="filters.js?v=20261006-options" defer></script>
+  <script src="strip-renderer.js?v=20261006-options" defer></script>
+  <script src="app.js?v=20261006-retake-only" defer></script>
 </head>
 <body>
   <header><div><span class="eyebrow">LITTLE MOMENTS, SOFTLY KEPT</span><h1>MIST <span>Photobooth</span></h1></div><p><span lang="ja">小さな思い出</span><br>A little moment, yours to keep.</p></header>
@@ -41,10 +41,10 @@
         <p>You can still fill your photo slots with <strong>Upload images</strong>, then save or print your set.</p>
       </div>
       <div id="camera-session-host">
-      <section class="session-panel" aria-label="Your four photos">
+      <section class="session-panel" aria-label="Your four photos" hidden>
         <div class="panel-heading"><h2 id="session-heading">Four little moments</h2><p id="progress">0 / 4 photos ready</p></div>
         <div id="slots"></div>
-        <p id="session-help" class="hint">Capture or upload all four photos to save or print. Clear a slot to replace its photo.</p>
+        <p id="session-help" class="hint">Choose Retake below a photo to take it again when you are ready.</p>
       </section>
       </div>
       <div class="flow-actions"><button id="back-design" class="quiet" type="button">Back to design</button><button id="review-photos" class="secondary" type="button" disabled>Preview photos</button></div>
@@ -53,8 +53,9 @@
       <section class="strip-editor" aria-label="Photo strip design">
         <div>
           <span class="eyebrow">01 / MAKE IT YOURS</span><h2>Your photo strip</h2>
+          <div id="design-options-host"><div id="shared-design-options">
           <div id="design-controls" class="design-controls">
-            <label>Filter<select id="strip-filter" aria-describedby="selected-filter"><option value="original">Original</option><option value="bw">Black &amp; White</option><option value="mono">Mono</option><option value="vintage">Vintage</option><option value="sepia">Sepia</option><option value="rosy">Rosy</option><option value="soft">Soft</option></select></label>
+            <label>Filter<select id="strip-filter" aria-describedby="selected-filter"><option value="original">Original</option><option value="bw">Black &amp; White</option><option value="mono">Mono</option><option value="vintage">Vintage</option><option value="sepia">Sepia</option><option value="rosy">Rosy</option><option value="soft">Soft</option><option value="warm">Warm glow</option><option value="cool">Cool breeze</option><option value="peach">Peach</option><option value="lavender">Lavender</option><option value="faded">Faded film</option><option value="vivid">Vivid</option></select></label>
             <div class="template-controls"><span class="control-label">Template</span>
               <select id="strip-template" hidden aria-label="Template"><option value="classic">Classic strip</option><option value="grid">Four-photo grid</option><option value="polaroid">Single Polaroid</option></select>
               <div class="template-choices" role="group" aria-label="Choose a template">
@@ -75,7 +76,7 @@
               <label class="custom-color">Custom color<input id="frame-color" type="color" value="#EFD0DA"></label>
               <span id="color-name" class="selection-note">Mist pink · #EFD0DA</span>
             </div>
-            <div class="theme-controls"><span class="control-label">Theme</span><label hidden>Theme<select id="strip-theme" aria-describedby="theme-description"><option value="none">Minimal ミニマル</option><option value="sakura">Sakura 桜</option><option value="tokyo">Tokyo 東京</option><option value="kyoto">Kyoto 京都</option><option value="osaka">Osaka 大阪</option><option value="hokkaido">Hokkaido 北海道</option><option value="hanabi">Hanabi 花火</option><option value="tsuki">Tsuki 月</option></select></label>
+            <div class="theme-controls"><span class="control-label">Theme</span><label hidden>Theme<select id="strip-theme" aria-describedby="theme-description"><option value="none">Minimal ミニマル</option><option value="sakura">Sakura 桜</option><option value="tokyo">Tokyo 東京</option><option value="kyoto">Kyoto 京都</option><option value="osaka">Osaka 大阪</option><option value="hokkaido">Hokkaido 北海道</option><option value="hanabi">Hanabi 花火</option><option value="tsuki">Tsuki 月</option><option value="umi">Umi 海</option><option value="mori">Mori 森</option><option value="love">Love</option><option value="hoshi">Hoshi 星</option><option value="ribbon">Ribbon</option><option value="retro">Retro</option></select></label>
               <div class="theme-choices" role="group" aria-label="Choose a theme">
                 <button type="button" class="theme-choice" data-theme="none" aria-pressed="true"><span>Minimal ミニマル</span><small>Simply you</small></button>
                 <button type="button" class="theme-choice" data-theme="sakura" aria-pressed="false"><span>Sakura 桜</span><small>Cherry blossom</small></button>
@@ -85,12 +86,19 @@
                 <button type="button" class="theme-choice" data-theme="hokkaido" aria-pressed="false"><span>Hokkaido 北海道</span><small>Snowy memories</small></button>
                 <button type="button" class="theme-choice" data-theme="hanabi" aria-pressed="false"><span>Hanabi 花火</span><small>Summer fireworks</small></button>
                 <button type="button" class="theme-choice" data-theme="tsuki" aria-pressed="false"><span>Tsuki 月</span><small>Moonlit moments</small></button>
+                <button type="button" class="theme-choice" data-theme="umi" aria-pressed="false"><span>Umi 海</span><small>Ocean breeze</small></button>
+                <button type="button" class="theme-choice" data-theme="mori" aria-pressed="false"><span>Mori 森</span><small>Forest whispers</small></button>
+                <button type="button" class="theme-choice" data-theme="love" aria-pressed="false"><span>Love</span><small>Sweet little hearts</small></button>
+                <button type="button" class="theme-choice" data-theme="hoshi" aria-pressed="false"><span>Hoshi 星</span><small>Written in the stars</small></button>
+                <button type="button" class="theme-choice" data-theme="ribbon" aria-pressed="false"><span>Ribbon</span><small>Tied with a bow</small></button>
+                <button type="button" class="theme-choice" data-theme="retro" aria-pressed="false"><span>Retro</span><small>Good old days</small></button>
               </div>
             </div>
           </div>
           <p id="selected-filter" class="filter-indicator" role="status" aria-live="polite">Selected filter: Original</p>
           <p id="theme-description" class="hint">A quiet frame with simple keepsake typography.</p>
           <p id="template-help" class="hint">Fill all four slots to export. Your photos stay here when you switch templates.</p>
+          </div></div>
         </div>
         <div id="design-preview-host" class="flow-preview-host"><div id="shared-strip-preview" class="strip-preview"><canvas id="strip-preview" width="900" height="2700" role="img" aria-label="Photo strip preview with your selected design"></canvas><span id="strip-resolution">900 × 2700 · 300 dpi</span><button id="open-strip-preview" class="secondary" type="button" aria-haspopup="dialog">View full frame</button></div></div>
       </section>
@@ -98,7 +106,11 @@
     </aside>
     <aside id="preview-step" aria-label="Review your photos" hidden>
       <div class="panel-heading"><div><span class="eyebrow">03 / PREVIEW</span><h2>Your little moments</h2></div></div>
-      <div id="review-preview-host" class="flow-preview-host"></div>
+      <p class="hint">Choose a frame design and color for your little moments. Your preview updates as you make it yours.</p>
+      <div class="review-editor">
+        <div id="review-preview-host" class="flow-preview-host"></div>
+        <section id="review-design-host" aria-label="Customize your finished photo strip"></section>
+      </div>
       <div id="review-session-host"></div>
       <div class="flow-actions"><button id="retake-photos" class="secondary" type="button">Retake photos</button><button id="continue-keep" class="primary" type="button" disabled>Continue to save / print</button></div>
       <button id="preview-back-camera" class="quiet" type="button">Back to camera</button>
