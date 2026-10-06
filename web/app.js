@@ -227,7 +227,6 @@ function stopCamera() {
   stream = null;
   video.srcObject = null;
   $("placeholder").hidden = false;
-  $("live-badge").hidden = true;
   updateControls();
 }
 
@@ -287,7 +286,6 @@ async function attachCamera(acquired, request, requestedFacing = null) {
   await video.play();
   await waitForVideo();
   $("placeholder").hidden = true;
-  $("live-badge").hidden = false;
   acquired.getVideoTracks().forEach(track => {
     track.addEventListener("ended", () => {
       if (stream !== acquired) return;

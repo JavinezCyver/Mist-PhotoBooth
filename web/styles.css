@@ -120,6 +120,74 @@ body > header, body > main, body > footer { position: relative; z-index: 1; }
   to { transform: translateX(12px) rotate(90deg) rotateY(65deg); }
 }
 .petals-paused .sakura-petals i, .petals-paused .sakura-petals i::before { animation-play-state: paused; }
+.sakura-blossoms { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+.sakura-blossoms span {
+  position: absolute; top: -44px; left: var(--left); width: var(--size, 27px); height: var(--size, 27px);
+  animation: blossom-fall var(--duration, 28s) var(--delay, 0s) linear infinite;
+}
+.sakura-blossoms span::before {
+  content: ""; display: block; width: 100%; height: 100%;
+  background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2264%22%20height%3D%2264%22%20viewBox%3D%220%200%2064%2064%22%3E%0A%20%20%3Cdefs%3E%0A%20%20%20%20%3CradialGradient%20id%3D%22bloom%22%20cx%3D%22.35%22%20cy%3D%22.25%22%20r%3D%22.85%22%3E%0A%20%20%20%20%20%20%3Cstop%20stop-color%3D%22%23fffafa%22%2F%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%22.6%22%20stop-color%3D%22%23edb7cc%22%2F%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23c27a9d%22%20stop-opacity%3D%22.85%22%2F%3E%0A%20%20%20%20%3C%2FradialGradient%3E%0A%20%20%20%20%3Cpath%20id%3D%22petal%22%20d%3D%22M0%202C-6-1-14-9-12-17C-11-23-5-25-1-20C1-25%208-24%2012-18C17-10%207-1%200%202Z%22%2F%3E%0A%20%20%3C%2Fdefs%3E%0A%20%20%3Cg%20transform%3D%22translate%2832%2032%29%22%20fill%3D%22url%28%23bloom%29%22%3E%0A%20%20%20%20%3Cuse%20href%3D%22%23petal%22%2F%3E%3Cuse%20href%3D%22%23petal%22%20transform%3D%22rotate%2872%29%22%2F%3E%0A%20%20%20%20%3Cuse%20href%3D%22%23petal%22%20transform%3D%22rotate%28144%29%22%2F%3E%3Cuse%20href%3D%22%23petal%22%20transform%3D%22rotate%28216%29%22%2F%3E%0A%20%20%20%20%3Cuse%20href%3D%22%23petal%22%20transform%3D%22rotate%28288%29%22%2F%3E%0A%20%20%20%20%3Cg%20stroke%3D%22%23bc7999%22%20stroke-width%3D%22.75%22%20opacity%3D%22.7%22%3E%0A%20%20%20%20%20%20%3Cpath%20d%3D%22M0%200L-2-8M0%200L7-4M0%200L6%205M0%200L-2%208M0%200L-8%200%22%2F%3E%0A%20%20%20%20%3C%2Fg%3E%0A%20%20%20%20%3Cg%20fill%3D%22%23c49374%22%3E%0A%20%20%20%20%20%20%3Ccircle%20cx%3D%22-2%22%20cy%3D%22-8%22%20r%3D%221%22%2F%3E%3Ccircle%20cx%3D%227%22%20cy%3D%22-4%22%20r%3D%221%22%2F%3E%0A%20%20%20%20%20%20%3Ccircle%20cx%3D%226%22%20cy%3D%225%22%20r%3D%221%22%2F%3E%3Ccircle%20cx%3D%22-2%22%20cy%3D%228%22%20r%3D%221%22%2F%3E%3Ccircle%20cx%3D%22-8%22%20cy%3D%220%22%20r%3D%221%22%2F%3E%0A%20%20%20%20%3C%2Fg%3E%0A%20%20%20%20%3Ccircle%20r%3D%222.8%22%20fill%3D%22%23ce96ad%22%20opacity%3D%22.8%22%2F%3E%0A%20%20%3C%2Fg%3E%0A%3C%2Fsvg%3E%0A") center / contain no-repeat;
+  animation: sakura-blossom-turn var(--spin, 16s) var(--delay, 0s) linear infinite;
+}
+.sakura-blossoms span:nth-child(even)::before { animation-direction: reverse; }
+.sakura-blossoms span:nth-child(1) { --left: 2%; --duration: 28s; --delay: -15s; --drift: 20px; }
+.sakura-blossoms span:nth-child(2) { --left: 7%; --duration: 32s; --delay: -4s; --size: 21.6px; --drift: 20px; }
+.sakura-blossoms span:nth-child(3) { --left: 12%; --duration: 26s; --delay: -21s; --size: 32.4px; --drift: 20px; }
+.sakura-blossoms span:nth-child(4) { --left: 18%; --duration: 30s; --delay: -10s; --drift: 20px; --spin: 20s; }
+.sakura-blossoms span:nth-child(5) { --left: 5%; --duration: 34s; --delay: -26s; --size: 23.4px; --drift: 20px; }
+.sakura-blossoms span:nth-child(6) { --left: 10%; --duration: 27s; --delay: -8s; --drift: 20px; }
+.sakura-blossoms span:nth-child(7) { --left: 15%; --duration: 31s; --delay: -20s; --size: 20.7px; --drift: 20px; }
+.sakura-blossoms span:nth-child(8) { --left: 21%; --duration: 25s; --delay: -2s; --size: 30.6px; --drift: 20px; --spin: 18s; }
+.sakura-blossoms span:nth-child(9) { --left: 4%; --duration: 33s; --delay: -14s; --drift: 20px; }
+.sakura-blossoms span:nth-child(10) { --left: 79%; --duration: 29s; --delay: -23s; --size: 22.5px; --drift: -20px; }
+.sakura-blossoms span:nth-child(11) { --left: 84%; --duration: 32s; --delay: -7s; --drift: -20px; --spin: 22s; }
+.sakura-blossoms span:nth-child(12) { --left: 89%; --duration: 26s; --delay: -17s; --size: 31.5px; --drift: -20px; }
+.sakura-blossoms span:nth-child(13) { --left: 94%; --duration: 31s; --delay: -25s; --size: 21.6px; --drift: -20px; }
+.sakura-blossoms span:nth-child(14) { --left: 81%; --duration: 27s; --delay: -6s; --drift: -20px; --spin: 19s; }
+.sakura-blossoms span:nth-child(15) { --left: 86%; --duration: 30s; --delay: -18s; --size: 30.6px; --drift: -20px; }
+.sakura-blossoms span:nth-child(16) { --left: 91%; --duration: 34s; --delay: -9s; --size: 23.4px; --drift: -20px; }
+.sakura-blossoms span:nth-child(17) { --left: 96%; --duration: 29s; --delay: -24s; --size: 25.2px; --drift: -20px; }
+.sakura-blossoms span:nth-child(18) { --left: 88%; --duration: 25s; --delay: -19s; --drift: -20px; }
+@keyframes blossom-fall {
+  0% { transform: translate3d(0, -20px, 0); opacity: 0; }
+  8%, 88% { opacity: .9; }
+  100% { transform: translate3d(var(--drift, 20px), calc(100vh + 64px), 0); opacity: 0; }
+}
+@keyframes sakura-blossom-turn { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+.petals-paused .sakura-blossoms span, .petals-paused .sakura-blossoms span::before { animation-play-state: paused; }
+.falling-cherries { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+.falling-cherries span {
+  position: absolute; top: -48px; left: var(--left); width: var(--size, 15px); height: var(--size, 15px);
+  animation: cherry-fall var(--duration, 30s) var(--delay, 0s) linear infinite;
+}
+.falling-cherries span::before {
+  content: ""; display: block; width: 100%; height: 100%;
+  background: url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2264%22%20height%3D%2264%22%20viewBox%3D%220%200%2064%2064%22%20fill%3D%22none%22%3E%0A%20%20%3Cdefs%3E%0A%20%20%20%20%3CradialGradient%20id%3D%22cherry%22%20cx%3D%22.3%22%20cy%3D%22.25%22%20r%3D%22.85%22%3E%0A%20%20%20%20%20%20%3Cstop%20stop-color%3D%22%23e495a7%22%2F%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%22.55%22%20stop-color%3D%22%23bd5577%22%2F%3E%0A%20%20%20%20%20%20%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23873653%22%2F%3E%0A%20%20%20%20%3C%2FradialGradient%3E%0A%20%20%20%20%3ClinearGradient%20id%3D%22leaf%22%20x1%3D%2231%22%20y1%3D%226%22%20x2%3D%2252%22%20y2%3D%2213%22%20gradientUnits%3D%22userSpaceOnUse%22%3E%0A%20%20%20%20%20%20%3Cstop%20stop-color%3D%22%238f9d7e%22%2F%3E%3Cstop%20offset%3D%221%22%20stop-color%3D%22%23b9c4a5%22%2F%3E%0A%20%20%20%20%3C%2FlinearGradient%3E%0A%20%20%3C%2Fdefs%3E%0A%20%20%3Cpath%20d%3D%22M18%2033Q19%2016%2032%207M44%2037Q43%2019%2032%207%22%20stroke%3D%22%2392745f%22%20stroke-width%3D%222.4%22%20stroke-linecap%3D%22round%22%2F%3E%0A%20%20%3Cpath%20d%3D%22M32%207Q44%200%2054%2010Q44%2020%2032%207Z%22%20fill%3D%22url%28%23leaf%29%22%2F%3E%0A%20%20%3Cpath%20d%3D%22M34%208L49%2010%22%20stroke%3D%22%2374876a%22%20stroke-width%3D%22.8%22%20opacity%3D%22.65%22%2F%3E%0A%20%20%3Cpath%20d%3D%22M18%2031C8%2027%203%2036%205%2044C7%2054%2016%2059%2023%2054C32%2048%2032%2037%2025%2033C23%2031%2021%2031%2018%2031Z%22%20fill%3D%22url%28%23cherry%29%22%2F%3E%0A%20%20%3Cpath%20d%3D%22M44%2035C35%2030%2029%2038%2031%2047C32%2057%2041%2062%2049%2057C58%2052%2060%2043%2053%2037C50%2034%2047%2034%2044%2035Z%22%20fill%3D%22url%28%23cherry%29%22%2F%3E%0A%20%20%3Cpath%20d%3D%22M11%2037Q9%2040%2010%2043M37%2040Q35%2043%2036%2046%22%20stroke%3D%22%23fff0ee%22%20stroke-width%3D%222.8%22%20stroke-linecap%3D%22round%22%20opacity%3D%22.7%22%2F%3E%0A%3C%2Fsvg%3E%0A") center / contain no-repeat;
+  animation: cherry-sway var(--sway, 7s) var(--delay, 0s) ease-in-out infinite alternate;
+}
+.falling-cherries span:nth-child(1) { --left: 3%; --duration: 30s; --delay: -16.0s; --size: 15px; --drift: 25px; --sway: 8s; }
+.falling-cherries span:nth-child(2) { --left: 9%; --duration: 33s; --delay: -4.4s; --size: 10px; --drift: 25px; --sway: 9s; }
+.falling-cherries span:nth-child(3) { --left: 16%; --duration: 36s; --delay: -21.6s; --size: 18px; --drift: 25px; --sway: 10s; }
+.falling-cherries span:nth-child(4) { --left: 22%; --duration: 29s; --delay: -5.8s; --size: 15px; --drift: 25px; --sway: 7s; }
+.falling-cherries span:nth-child(5) { --left: 6%; --duration: 32s; --delay: -21.3s; --size: 11px; --drift: 25px; --sway: 8s; }
+.falling-cherries span:nth-child(6) { --left: 14%; --duration: 35s; --delay: -9.3s; --size: 15px; --drift: 25px; --sway: 9s; }
+.falling-cherries span:nth-child(7) { --left: 78%; --duration: 28s; --delay: -20.5s; --size: 12px; --drift: -25px; --sway: 10s; }
+.falling-cherries span:nth-child(8) { --left: 84%; --duration: 31s; --delay: -10.3s; --size: 17px; --drift: -25px; --sway: 7s; }
+.falling-cherries span:nth-child(9) { --left: 91%; --duration: 34s; --delay: -27.2s; --size: 15px; --drift: -25px; --sway: 8s; }
+.falling-cherries span:nth-child(10) { --left: 96%; --duration: 27s; --delay: -10.8s; --size: 10px; --drift: -25px; --sway: 9s; }
+.falling-cherries span:nth-child(11) { --left: 81%; --duration: 30s; --delay: -26.0s; --size: 15px; --drift: -25px; --sway: 10s; }
+.falling-cherries span:nth-child(12) { --left: 89%; --duration: 33s; --delay: -15.4s; --size: 18px; --drift: -25px; --sway: 7s; }
+@keyframes cherry-fall {
+  0% { transform: translate3d(0, -20px, 0); opacity: 0; }
+  8%, 88% { opacity: .9; }
+  100% { transform: translate3d(var(--drift, 25px), calc(100vh + 80px), 0); opacity: 0; }
+}
+@keyframes cherry-sway {
+  from { transform: rotate(-18deg) translateX(-4px); }
+  to { transform: rotate(22deg) translateX(4px); }
+}
+.petals-paused .falling-cherries span, .petals-paused .falling-cherries span::before { animation-play-state: paused; }
 #toggle-petals { font-size: 12px; padding: 8px 12px; flex-shrink: 0; }
 header { display: flex; justify-content: space-between; align-items: center; gap: 24px; margin-bottom: 28px; }
 h1, h2 { font-family: Georgia, "Yu Mincho", "Hiragino Mincho ProN", serif; font-weight: 400; }
@@ -146,8 +214,6 @@ video.mirrored + #camera-preview { transform: scaleX(-1); }
 #placeholder h2 { font-size: clamp(23px, 2.8vw, 34px); margin: 14px 0; }
 #placeholder p { font-size: 14px; line-height: 1.8; margin: 0; color: var(--muted); }
 .camera-icon { display: inline-grid; place-items: center; width: 74px; height: 74px; border-radius: 50%; background: #fbf5f799; font-size: 50px; line-height: 1; color: var(--rose); box-shadow: 0 5px 20px #a4547210; }
-#live-badge { position: absolute; top: 25px; left: 25px; background: var(--white); color: var(--rose); padding: 8px 12px; border-radius: 30px; font-size: 10px; font-weight: 700; letter-spacing: 2px; }
-#live-badge i { display: inline-block; width: 7px; height: 7px; background: var(--rose); border-radius: 50%; margin-right: 6px; }
 #countdown {
   position: absolute;
   left: 50%;
@@ -337,7 +403,7 @@ footer { display: flex; justify-content: space-between; gap: 12px; font-size: 12
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .sakura-petals, #toggle-petals { display: none; }
+  .sakura-petals, .sakura-blossoms, .falling-cherries, #toggle-petals { display: none; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
 /* The printer's selected paper size is respected, with a quarter-inch margin. */
