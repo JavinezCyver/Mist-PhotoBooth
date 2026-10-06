@@ -1,5 +1,7 @@
 # CHERYL Photobooth
 
+Use **Dark mode** in the header for a plum background, warm rose controls, and soft pink text that match the sakura design. The booth follows your device appearance until you choose a mode, then remembers your choice in this browser. Changing appearance preserves frame colors, photos, and exported images; printing stays light. Run `node test_browser.mjs --appearance-only` to check preferences, contrast, responsive layouts, and unchanged exports.
+
 Soft sakura petals drift behind the booth panels. **Pause petals** in the footer stops the animation; **Resume petals** starts it again. The petals ignore clicks, stay out of saved photos and printing, and are hidden when your device requests reduced motion.
 
 Eighteen whole cherry blossoms also fall and slowly rotate alongside the 72 petals. Their small SVG artwork is embedded in the stylesheet. They follow the same pause control and reduced-motion settings and remain behind the photobooth interface.

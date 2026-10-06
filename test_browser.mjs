@@ -119,7 +119,68 @@ with zipfile.ZipFile(sys.argv[1]) as archive:
     if (await evaluate('typeof connectCamera === "function" && Boolean(document.getElementById("strip-filter-trigger"))')) break;
     await sleep(100);
   }
-  if (process.argv.includes('--performance-only')) {
+  if (process.argv.includes('--appearance-only')) {
+    await command('Emulation.setEmulatedMedia',{features:[{name:'prefers-color-scheme',value:'dark'}]});
+    await sleep(100);
+    assert.equal(await evaluate('document.documentElement.dataset.appearance'), 'dark', 'Initial appearance follows the device preference');
+    await evaluate('document.getElementById("toggle-dark-mode").click()');
+    assert.equal(await evaluate('localStorage.getItem("cheryl-appearance")'), 'light');
+    await command('Page.reload');
+    for(let attempt=0;attempt<100;attempt++) {
+      if(await evaluate('document.readyState === "complete" && typeof complete === "function" && Boolean(document.getElementById("strip-filter-trigger"))')) break;
+      await sleep(100);
+    }
+    assert.equal(await evaluate('document.documentElement.dataset.appearance'), 'light', 'Saved appearance overrides device preference after reload');
+    assert.equal(await evaluate(`(async()=>{
+      document.getElementById('continue-camera').click();
+      const source=document.createElement('canvas');source.width=160;source.height=100;
+      source.getContext('2d').fillStyle='#1248a0';source.getContext('2d').fillRect(0,0,160,100);
+      const file=new File([await toBlob(source)],'moment.png',{type:'image/png'});
+      await uploadImages([file,file,file,file]);await renderStripPreview();
+      const before=document.getElementById('strip-preview').toDataURL();
+      const style=JSON.stringify(stripStyle());const urls=photos.map(photo=>photo.url);
+      const exported=await prepareStripExport();const hash=PhotoBoothFiles.crc32(new Uint8Array(await exported.png.arrayBuffer()));
+      document.getElementById('toggle-dark-mode').click();
+      if(document.getElementById('toggle-dark-mode').getAttribute('aria-pressed')!=='true')return false;
+      if(document.querySelector('meta[name="theme-color"]').content!=='#201920')return false;
+      await renderStripPreview();
+      const darkExport=await prepareStripExport();
+      return before===document.getElementById('strip-preview').toDataURL() && JSON.stringify(stripStyle())===style
+        && photos.every((photo,index)=>photo.url===urls[index]) && hash===PhotoBoothFiles.crc32(new Uint8Array(await darkExport.png.arrayBuffer()));
+    })()`),true,'Appearance changes preserve source photos, selected frame styles and exported PNG pixels');
+    assert.equal(await evaluate(`(() => {
+      const luminance=color=>{
+        const rgb=color.match(/[\\d.]+/g).slice(0,3).map(Number).map(channel=>channel/255).map(channel=>channel<=.04045?channel/12.92:((channel+.055)/1.055)**2.4);
+        return .2126*rgb[0]+.7152*rgb[1]+.0722*rgb[2];
+      };
+      const ratio=(a,b)=>(Math.max(luminance(a),luminance(b))+.05)/(Math.min(luminance(a),luminance(b))+.05);
+      for(const selector of ['.primary','.secondary','.theme-choice','.template-choice','.filter-indicator','button:disabled']) {
+        const style=getComputedStyle(document.querySelector(selector));
+        if(ratio(style.color,style.backgroundColor)<4.5)throw new Error('Dark contrast failed: '+selector);
+      }
+      const hint=getComputedStyle(document.querySelector('.hint'));const panel=getComputedStyle(document.getElementById('preview-step'));
+      return ratio(hint.color,panel.backgroundColor)>=4.5;
+    })()`),true,'Dark mode text and controls retain readable contrast');
+    await evaluate('document.getElementById("strip-filter-trigger").click()');
+    assert.equal(await evaluate('getComputedStyle(document.getElementById("strip-filter-options")).backgroundColor'), 'rgb(43, 34, 42)');
+    await evaluate('document.getElementById("strip-filter-trigger").click()');
+    await command('Emulation.setDeviceMetricsOverride',{width:1440,height:1000,deviceScaleFactor:1,mobile:false});
+    await evaluate('showStep("design")');
+    await new Promise(resolve=>setTimeout(resolve,650));
+    const screenshot=await command('Page.captureScreenshot',{captureBeyondViewport:false});
+    await writeFile(path.join(tmpdir(),'photobooth-dark-preview.png'),Buffer.from(screenshot.data,'base64'));
+    for(const [width,height] of [[320,568],[390,844],[820,1180],[1440,1100]]) {
+      await command('Emulation.setDeviceMetricsOverride',{width,height,deviceScaleFactor:1,mobile:width<1100});
+      for(const step of ['design','camera','preview','keep']) {
+        await evaluate(`showStep('${step}')`);
+        assert.equal(await evaluate('document.documentElement.scrollWidth<=innerWidth'),true,`Dark mode ${step} overflow at ${width}x${height}`);
+      }
+    }
+    await command('Emulation.setEmulatedMedia',{media:'print',features:[{name:'prefers-color-scheme',value:'dark'}]});
+    assert.equal(await evaluate('getComputedStyle(document.body).backgroundColor'), 'rgb(255, 255, 255)');
+    assert.deepEqual(errors,[]);
+    console.log('PASS: system dark preference, saved toggle, contrast, dark dropdowns, unchanged photo exports, responsive screens and white printing.');
+  } else if (process.argv.includes('--performance-only')) {
     await command('Emulation.setCPUThrottlingRate', {rate:4});
     const metrics = await evaluate(`(async () => {
       const cards = Array.from(document.querySelectorAll('.theme-choice'));

@@ -1,6 +1,28 @@
 "use strict";
 const REQUIRED = 4;
 const $ = (id) => document.getElementById(id);
+const appearancePreference = matchMedia("(prefers-color-scheme: dark)");
+let savedAppearance = null;
+try {
+  const value = localStorage.getItem("cheryl-appearance");
+  if (value === "dark" || value === "light") savedAppearance = value;
+} catch { /* The toggle still works when browser storage is unavailable. */ }
+function applyAppearance(appearance) {
+  const dark = appearance === "dark";
+  document.documentElement.dataset.appearance = appearance;
+  $("toggle-dark-mode").setAttribute("aria-pressed", String(dark));
+  $("toggle-dark-mode").title = dark ? "Turn dark mode off" : "Turn dark mode on";
+  document.querySelector('meta[name="theme-color"]').content = dark ? "#201920" : "#EFD0DA";
+}
+applyAppearance(savedAppearance || (appearancePreference.matches ? "dark" : "light"));
+$("toggle-dark-mode").addEventListener("click", () => {
+  savedAppearance = document.documentElement.dataset.appearance === "dark" ? "light" : "dark";
+  applyAppearance(savedAppearance);
+  try { localStorage.setItem("cheryl-appearance", savedAppearance); } catch { /* Session preference remains usable. */ }
+});
+appearancePreference.addEventListener("change", event => {
+  if (!savedAppearance) applyAppearance(event.matches ? "dark" : "light");
+});
 const video = $("camera");
 let stream = null;
 let photos = Array(REQUIRED).fill(null);
