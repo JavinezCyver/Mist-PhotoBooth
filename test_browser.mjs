@@ -119,7 +119,59 @@ with zipfile.ZipFile(sys.argv[1]) as archive:
     if (await evaluate('typeof connectCamera === "function" && Boolean(document.getElementById("strip-filter-trigger"))')) break;
     await sleep(100);
   }
-  if (process.argv.includes('--appearance-only')) {
+  if (process.argv.includes('--camera-switch-only')) {
+    await command('Emulation.setDeviceMetricsOverride',{width:390,height:844,deviceScaleFactor:1,mobile:true});
+    await command('Emulation.setUserAgentOverride',{userAgent:'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/130.0.0.0 Mobile Safari/537.36'});
+    await evaluate(`(() => {
+      // Browser-generated streams simulate phone hardware only inside this test.
+      const canvas=document.createElement('canvas');canvas.width=640;canvas.height=480;
+      const ctx=canvas.getContext('2d');ctx.fillStyle='#cda0b4';ctx.fillRect(0,0,640,480);
+      setInterval(()=>ctx.fillRect(0,0,640,480),100);
+      window.__cameraSwitchTest={calls:[],streams:[],unavailable:false,canvas};
+      navigator.mediaDevices.getSupportedConstraints=()=>({facingMode:true});
+      navigator.mediaDevices.enumerateDevices=async()=>[
+        {kind:'videoinput',deviceId:'test-front',label:'Front camera'},
+        {kind:'videoinput',deviceId:'test-back',label:'Back camera'}
+      ];
+      navigator.mediaDevices.getUserMedia=async constraints=>{
+        const state=window.__cameraSwitchTest;
+        if(state.streams.some(stream=>stream.getVideoTracks()[0].readyState!=='ended'))throw new Error('Previous stream was not released');
+        const mode=constraints.video.facingMode?.exact||constraints.video.facingMode?.ideal||(constraints.video.deviceId?.exact==='test-back'?'environment':'user');
+        state.calls.push(mode);
+        if(state.unavailable && mode==='environment')throw new DOMException('No back camera','OverconstrainedError');
+        const acquired=canvas.captureStream(10),track=acquired.getVideoTracks()[0];
+        track.getSettings=()=>({width:640,height:480,facingMode:mode,deviceId:mode==='environment'?'test-back':'test-front'});
+        state.streams.push(acquired);return acquired;
+      };
+      showStep('camera');
+    })()`);
+    assert.equal(await evaluate('document.getElementById("mirror").hidden'),true);
+    assert.equal(await evaluate('(()=>{const button=document.getElementById("switch-camera");return !button.hidden && button.disabled && button.getBoundingClientRect().width>=44})()'),true,'Camera switch is visible before opening the camera');
+    await evaluate('connectCamera()');
+    assert.equal(await evaluate('activeFacing==="user" && !document.getElementById("switch-camera").hidden && document.getElementById("mirror").checked'),true);
+    assert.equal(await evaluate('document.getElementById("switch-camera").getAttribute("aria-label")'),'Switch to back camera');
+    await evaluate(`document.getElementById('capture-delay').value='0';capturePhoto()`);
+    const photo=await evaluate('photos[0].url');
+    await evaluate('document.getElementById("switch-camera").click()');
+    for(let i=0;i<100 && await evaluate('connecting');i++)await sleep(100);
+    assert.equal(await evaluate('activeFacing==="environment" && !document.getElementById("mirror").checked && Boolean(document.querySelector("#switch-camera svg"))'),true);
+    assert.equal(await evaluate('document.getElementById("switch-camera").getAttribute("aria-label")'),'Switch to front camera');
+    assert.equal(await evaluate('photos[0].url'),photo);
+    await evaluate('switchCamera()');
+    assert.equal(await evaluate('activeFacing==="user" && document.getElementById("mirror").checked'),true);
+    for(const width of [320,390,768,1440]) {
+      await command('Emulation.setDeviceMetricsOverride',{width,height:900,deviceScaleFactor:1,mobile:width<850});
+      assert.equal(await evaluate('document.documentElement.scrollWidth<=innerWidth'),true);
+      assert.equal(await evaluate('(()=>{const r=document.getElementById("switch-camera").getBoundingClientRect();return r.width>=44 && r.height>=44})()'),true);
+    }
+    await evaluate('window.__cameraSwitchTest.unavailable=true;switchCamera()');
+    assert.equal(await evaluate('Boolean(cameraReady()) && activeFacing==="user" && document.getElementById("switch-camera").disabled && !document.getElementById("switch-camera").hidden'),true);
+    assert.equal(await evaluate('photos[0].url'),photo);
+    await evaluate('stopCamera()');
+    assert.equal(await evaluate('!document.getElementById("switch-camera").hidden && document.getElementById("switch-camera").disabled'),true);
+    assert.deepEqual(errors,[]);
+    console.log('PASS: camera icon, front/back switching, automatic mirroring, stream release, photo preservation, unavailable-camera recovery and responsive touch targets (simulated phone streams).');
+  } else if (process.argv.includes('--appearance-only')) {
     await command('Emulation.setEmulatedMedia',{features:[{name:'prefers-color-scheme',value:'dark'}]});
     await sleep(100);
     assert.equal(await evaluate('document.documentElement.dataset.appearance'), 'dark', 'Initial appearance follows the device preference');
@@ -992,11 +1044,11 @@ assert re.search(rb'/Height\\s+' + sys.argv[3].encode() + rb'\\b', data)
   await evaluate('switchCamera()');
   assert.equal(await evaluate('activeFacing === "environment" && !document.getElementById("mirror").checked && photos.filter(Boolean).length === 1'), true);
   assert.equal(await evaluate('window.__cameraTest.calls.at(-1).video.facingMode.exact'), 'environment');
-  assert.equal(await evaluate('document.getElementById("switch-camera").textContent'), 'Switch to front camera');
+  assert.equal(await evaluate('document.getElementById("switch-camera").getAttribute("aria-label")'), 'Switch to front camera');
   await evaluate('switchCamera()');
   assert.equal(await evaluate('activeFacing === "user" && document.getElementById("mirror").checked'), true, JSON.stringify(await evaluate('({ facing: activeFacing, mirror: document.getElementById("mirror").checked, status: document.getElementById("status").textContent })')));
   await evaluate('window.__cameraTest.unavailable = true; switchCamera()');
-  assert.equal(await evaluate('Boolean(cameraReady()) && activeFacing === "user" && document.getElementById("switch-camera").hidden && photos.filter(Boolean).length === 1'), true);
+  assert.equal(await evaluate('Boolean(cameraReady()) && activeFacing === "user" && document.getElementById("switch-camera").disabled && !document.getElementById("switch-camera").hidden && photos.filter(Boolean).length === 1'), true);
   assert.equal(await evaluate('document.getElementById("save").disabled && document.getElementById("print").disabled'), true);
   assert.equal(await evaluate('document.documentElement.scrollWidth <= window.innerWidth'), true);
   for (const width of [320,360,390,768,1440]) {

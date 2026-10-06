@@ -6,11 +6,11 @@
   <meta name="theme-color" content="#EFD0DA">
   <title>CHERYL Photobooth</title>
   <link rel="icon" href="favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="styles.css?v=20261006-dark-mode">
+  <link rel="stylesheet" href="styles.css?v=20261006-visible-camera-switch">
   <script src="local-save.js" defer></script>
   <script src="filters.js?v=20261006-more-designs" defer></script>
   <script src="strip-renderer.js?v=20261006-more-designs" defer></script>
-  <script src="app.js?v=20261006-dark-mode" defer></script>
+  <script src="app.js?v=20261006-visible-camera-switch" defer></script>
 </head>
 <body>
   <div class="sakura-petals" aria-hidden="true">
@@ -47,9 +47,9 @@
       <div class="camera-controls">
         <label>Camera <select id="device" aria-label="Camera device"><option value="">Default camera</option></select></label>
         <button id="connect" class="secondary">Open camera</button>
-        <button id="switch-camera" class="secondary" hidden disabled>Switch to back camera</button>
         <label class="timer-choice">Countdown<select id="capture-delay"><option value="0">Off</option><option value="3" selected>3 seconds</option><option value="5">5 seconds</option><option value="10">10 seconds</option></select></label>
-        <label class="mirror"><input id="mirror" type="checkbox" checked> Mirror photos</label>
+        <button id="switch-camera" class="secondary camera-switch" type="button" aria-label="Switch to back camera" title="Open camera to switch cameras" disabled><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M4 6h3l2-3h6l2 3h3a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1Z"/><path d="M8 11a4 4 0 0 1 7-1l1 2m0-3v3h-3M16 16a4 4 0 0 1-7 1l-1-2m0 3v-3h3"/></svg></button>
+        <input id="mirror" type="checkbox" checked hidden aria-hidden="true">
       </div>
       <button id="capture" class="primary" disabled>Capture photo 1 · 3 second countdown</button>
       <button id="upload" class="secondary upload-button">Upload images</button>

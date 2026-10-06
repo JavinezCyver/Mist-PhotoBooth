@@ -189,9 +189,11 @@ function updateControls() {
   const nextFacing = (activeFacing || preferredFacing) === "environment" ? "user" : "environment";
   const labeledPair = [...facingByDevice.values()].includes("user") && [...facingByDevice.values()].includes("environment");
   const canFlip = labeledPair || (facingSupported() && (mobileDevice() || (activeFacing && cameraDevices.length > 1)));
-  $("switch-camera").hidden = !stream || !canFlip || unavailableFacing.has(nextFacing);
-  $("switch-camera").disabled = !unlocked || !cameraReady();
-  $("switch-camera").textContent = `Switch to ${nextFacing === "user" ? "front" : "back"} camera`;
+  const switchAvailable = Boolean(stream) && canFlip && !unavailableFacing.has(nextFacing);
+  $("switch-camera").disabled = !unlocked || !cameraReady() || !switchAvailable;
+  const switchLabel = !stream ? "Open camera to switch cameras" : !switchAvailable ? "Front/back camera switching is unavailable on this device" : `Switch to ${nextFacing === "user" ? "front" : "back"} camera`;
+  $("switch-camera").setAttribute("aria-label", switchLabel);
+  $("switch-camera").title = switchLabel;
   const indices = requiredIndices(), single = indices.length === 1, next = pendingCaptureSlot ?? nextSlot();
   const delay = Number($("capture-delay").value);
   $("capture").textContent = complete() && pendingCaptureSlot === null ? (single ? "Your Polaroid photo is ready" : "All four photos captured") : `Capture photo ${next + 1}${delay ? ` · ${delay} second countdown` : " · no countdown"}`;
@@ -386,7 +388,7 @@ async function connectCamera(options = {}) {
 }
 
 async function switchCamera() {
-  if (busy || countdown || connecting || !stream || $("switch-camera").hidden) return;
+  if (busy || countdown || connecting || !stream || $("switch-camera").disabled) return;
   const facingMode = (activeFacing || preferredFacing) === "environment" ? "user" : "environment";
   await connectCamera({ facingMode });
 }

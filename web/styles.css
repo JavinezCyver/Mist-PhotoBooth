@@ -291,7 +291,8 @@ video.mirrored + #camera-preview { transform: scaleX(-1); }
 .camera-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin: 18px 0; font-size: 13px; }
 .camera-controls > label:first-child { display: flex; align-items: center; gap: 8px; }
 .camera-controls select { max-width: 170px; }
-.mirror { margin-left: auto; display: flex; align-items: center; gap: 6px; min-height: 44px; cursor: pointer; }
+.camera-switch { margin-left: auto; display: inline-flex; align-items: center; justify-content: center; flex: 0 0 48px; width: 48px; min-height: 48px; padding: 10px; }
+.camera-switch svg { flex-shrink: 0; }
 select, input[type=color] { border: 1px solid var(--line); border-radius: 12px; background: var(--white); color: var(--plum); font: inherit; }
 select { padding: 11px 30px 11px 12px; min-height: 44px; max-width: 100%; }
 input { accent-color: var(--rose); }
@@ -386,7 +387,7 @@ footer { display: flex; justify-content: space-between; gap: 12px; font-size: 12
   main { grid-template-columns: minmax(0, 1fr) 340px; gap: 20px; }
   .camera-panel, aside { padding: 20px; }
   .session-tag { display: none; }
-  .mirror { margin-left: 0; }
+  .camera-switch { margin-left: 0; }
 }
 @media screen and (max-width: 1100px) {
   body { padding: 24px 18px; --page-gutter: 18px; --page-top: 24px; --page-bottom: 24px; }
@@ -419,7 +420,7 @@ footer { display: flex; justify-content: space-between; gap: 12px; font-size: 12
   .camera-controls button { flex: 1; }
   .timer-choice { width: 100%; }
   .timer-choice select { flex: 1; min-width: 0; }
-  .mirror { width: 100%; padding: 4px 0; }
+  .camera-controls .camera-switch { flex: 0 0 48px; margin-left: auto; }
   .session-panel h2 { font-size: 20px; }
   #slots { gap: 8px; }
   .slot-preview { height: 85px; font-size: 10px; }
